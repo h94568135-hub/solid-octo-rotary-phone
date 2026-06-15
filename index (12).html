@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breaking 動作分類庫</title>
+<style>
+:root {
+  --bg:#f5f4f1;--surface:#fff;--surface2:#eeece8;
+  --border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.16);
+  --text:#1a1a18;--text2:#58574f;--text3:#9a9890;
+  --accent:#1D9E75;--accent-dark:#0F6E56;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-bd:#5DCAA5;
+  --amber:#633806;--amber-bg:#FAEEDA;--amber-bd:#EF9F27;
+  --coral:#712B13;--coral-bg:#FAECE7;--coral-bd:#F0997B;
+  --purple:#3C3489;--purple-bg:#EEEDFE;--purple-bd:#AFA9EC;
+  --blue:#0C447C;--blue-bg:#E6F1FB;--blue-bd:#85B7EB;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#161614;--surface:#202020;--surface2:#2a2a28;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --text:#e6e4de;--text2:#a6a49c;--text3:#66645c;
+  --accent:#5DCAA5;--accent-dark:#9FE1CB;
+  --teal:#9FE1CB;--teal-bg:#04342C;--teal-bd:#0F6E56;
+  --amber:#FAC775;--amber-bg:#412402;--amber-bd:#854F0B;
+  --coral:#F0997B;--coral-bg:#4A1B0C;--coral-bd:#993C1D;
+  --purple:#CECBF6;--purple-bg:#26215C;--purple-bd:#534AB7;
+  --blue:#B5D4F4;--blue-bg:#042C53;--blue-bd:#185FA5;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+
+/* nav tabs */
+.nav-tabs{display:flex;background:var(--surface);border-bottom:0.5px solid var(--border);overflow-x:auto}
+.nav-tab{flex:none;padding:.9rem 1.4rem;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:var(--text2)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* pages */
+.page{display:none}.page.active{display:block}
+
+/* ── HEADER ── */
+.header{padding:1.5rem 2rem 1.1rem;border-bottom:0.5px solid var(--border);background:var(--surface)}
+.header-top{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.header h1{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.version-tag{font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--border2);color:var(--text3);background:var(--surface2)}
+.header-sub{font-size:13px;color:var(--text3)}
+
+/* ── TODAY BOX ── */
+.today-box{margin:1.2rem 2rem;background:var(--surface);border:0.5px solid var(--border);border-radius:14px;overflow:hidden}
+.today-header{padding:1rem 1.25rem .6rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.today-title{font-size:15px;font-weight:700}
+.today-date{font-size:12px;color:var(--text3)}
+.today-body{padding:1rem 1.25rem}
+.today-section{margin-bottom:1rem}
+.today-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px}
+.today-moves{display:flex;flex-direction:column;gap:6px}
+.today-move{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface2);cursor:pointer;transition:background .15s}
+.today-move:hover{background:var(--border)}
+.today-move-info{flex:1;min-width:0}
+.today-move-name{font-size:13px;font-weight:600}
+.today-move-sub{font-size:11px;color:var(--text3)}
+.today-move-done{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s}
+.today-move-done.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.today-move-done.done::after{content:"✓";font-size:12px;font-weight:700}
+.cat-stripe{width:4px;height:32px;border-radius:2px;flex-shrink:0}
+.empty-today{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+
+/* ── STREAK & STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 2rem 1.2rem}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:.9rem 1rem}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── WEEKLY SCHEDULE ── */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:0 2rem 1.2rem}
+.week-day{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:.6rem .4rem;text-align:center}
+.week-day.today-col{border-color:var(--accent);background:var(--teal-bg)}
+.week-day-label{font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px}
+.week-day-cats{display:flex;flex-direction:column;gap:3px;min-height:28px;align-items:center}
+.week-dot{width:8px;height:8px;border-radius:50%}
+.week-day.has-log .week-day-label{color:var(--accent)}
+
+/* ── SCHEDULE BUILDER ── */
+.schedule-builder{margin:0 2rem 1.5rem}
+.sb-row{display:grid;grid-template-columns:60px 1fr;align-items:center;gap:10px;margin-bottom:8px}
+.sb-day-label{font-size:12px;font-weight:600;color:var(--text2)}
+.sb-cats{display:flex;gap:5px;flex-wrap:wrap}
+.sb-cat-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s}
+.sb-cat-btn.active{color:#fff;border-color:transparent}
+.sb-rest{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text3);cursor:pointer}
+.sb-rest.active{background:var(--surface2);color:var(--text2);font-weight:600}
+
+/* ── PROGRESS ── */
+.progress-list{display:flex;flex-direction:column;gap:8px;margin:0 2rem 1.5rem}
+.prog-item{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:12px;cursor:pointer}
+.prog-item:hover{border-color:var(--border2)}
+.prog-status-btn{flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--border2);cursor:pointer;font-weight:600;white-space:nowrap}
+.prog-status-btn.learning{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
+.prog-status-btn.practicing{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bd)}
+.prog-status-btn.mastered{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-bd)}
+.prog-status-btn.untouched{background:var(--surface2);color:var(--text3)}
+.prog-info{flex:1;min-width:0}
+.prog-name{font-size:13px;font-weight:600}
+.prog-sub{font-size:11px;color:var(--text3)}
+.prog-log-count{font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* ── LOG HISTORY ── */
+.log-list{display:flex;flex-direction:column;gap:8px;margin:0 2rem 1.5rem}
+.log-day-group{}
+.log-day-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;padding-top:8px}
+.log-entry{background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:.7rem 1rem;display:flex;align-items:center;gap:10px}
+.log-entry-name{font-size:13px;font-weight:600;flex:1}
+.log-entry-sub{font-size:11px;color:var(--text3)}
+.log-delete{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px;border-radius:4px}
+.log-delete:hover{color:var(--coral);background:var(--coral-bg)}
+
+/* ── RECOMMEND ── */
+.recommend-box{margin:0 2rem 1.2rem;background:var(--teal-bg);border:0.5px solid var(--teal-bd);border-radius:12px;padding:1rem 1.25rem}
+.recommend-title{font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px}
+.recommend-moves{display:flex;flex-direction:column;gap:6px}
+.rec-move{background:var(--surface);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:10px;cursor:pointer;border:0.5px solid var(--border)}
+.rec-move:hover{border-color:var(--teal-bd)}
+.rec-move-info{flex:1}
+.rec-move-name{font-size:13px;font-weight:600}
+.rec-move-reason{font-size:11px;color:var(--text3)}
+
+/* ── LIBRARY (動作庫) ── */
+.cat-tabs{padding:.85rem 2rem .7rem;display:flex;gap:6px;flex-wrap:wrap;border-bottom:0.5px solid var(--border);background:var(--surface);overflow-x:auto}
+.cat-tab{font-size:12px;padding:5px 14px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.cat-tab:hover{background:var(--surface2)}
+.cat-tab.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.cat-tab .cdot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.toolbar{padding:.7rem 2rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:0.5px solid var(--border);background:var(--bg)}
+.diff-btn{font-size:11px;padding:4px 11px;border-radius:20px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.diff-btn:hover{background:var(--surface2)}
+.diff-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.search-wrap{margin-left:auto;position:relative}
+.search-wrap input{font-size:13px;padding:7px 12px 7px 28px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);width:180px;outline:none;transition:border-color .15s}
+.search-wrap input:focus{border-color:var(--accent)}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text3);pointer-events:none}
+.add-btn{font-size:12px;padding:6px 13px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;white-space:nowrap}
+.add-btn:hover{opacity:.88}
+.lib-stats{padding:.5rem 2rem;display:flex;gap:20px;font-size:12px;color:var(--text3);border-bottom:0.5px solid var(--border)}
+.lib-stats b{color:var(--text2);font-weight:600}
+.section-heading{padding:1.1rem 2rem .4rem;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:8px}
+.sh-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.grid-wrap{padding:.5rem 2rem 1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.card-stripe{height:3px;border-radius:2px;margin-bottom:9px}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+.card-name-en{font-size:14px;font-weight:700}
+.card-name-zh{font-size:11px;color:var(--text3);margin-bottom:7px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;white-space:nowrap;font-weight:600}
+.badge-beginner{background:var(--teal-bg);color:var(--teal);border:0.5px solid var(--teal-bd)}
+.badge-intermediate{background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd)}
+.badge-advanced{background:var(--coral-bg);color:var(--coral);border:0.5px solid var(--coral-bd)}
+.stag-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
+.stag{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--surface2);color:var(--text2)}
+.pwr-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.pwr-lbl{font-size:11px;color:var(--text3);width:26px}
+.pwr-bg{flex:1;height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}
+.pwr-fill{height:100%;border-radius:2px}
+.pwr-v{font-size:11px;color:var(--text2);font-weight:600;min-width:20px;text-align:right}
+.card-foot{display:flex;align-items:center;gap:5px;margin-top:7px;padding-top:7px;border-top:0.5px solid var(--border)}
+.src-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.src-est{background:var(--amber-bd)}.src-mea{background:var(--teal-bd)}
+.card-src-txt{font-size:10px;color:var(--text3)}
+.empty{padding:3rem;text-align:center;color:var(--text3);grid-column:1/-1;font-size:13px}
+
+/* ── OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;overflow-y:auto;padding:2rem 1rem}
+.overlay.open{display:flex;align-items:flex-start;justify-content:center}
+.panel{background:var(--surface);border-radius:16px;border:0.5px solid var(--border);width:100%;max-width:580px;padding:1.6rem;margin:auto}
+.panel-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.3rem}
+.panel-titles{display:flex;flex-direction:column;gap:3px}
+.panel-name-en{font-size:21px;font-weight:700}
+.panel-name-zh{font-size:13px;color:var(--text3)}
+.close-btn{background:var(--surface2);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:17px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec{margin-bottom:1.1rem}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:12px;padding:3px 9px;border-radius:6px;background:var(--surface2);color:var(--text2)}
+.muscle-tag{background:var(--purple-bg);color:var(--purple);border:0.5px solid var(--purple-bd)}
+.variant-tag{background:var(--blue-bg);color:var(--blue);border:0.5px solid var(--blue-bd)}
+.pwr-d-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pwr-d-lbl{font-size:12px;color:var(--text2);width:52px}
+.pwr-d-bar{flex:1;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.pwr-d-fill{height:100%;border-radius:3px}
+.pwr-d-val{font-size:12px;font-weight:700;min-width:26px;text-align:right}
+.pwr-total{display:flex;justify-content:space-between;padding-top:8px;border-top:0.5px solid var(--border);margin-top:4px;font-size:13px}
+.pwr-total span:last-child{font-weight:700}
+.step-list{display:flex;flex-direction:column;gap:7px}
+.step-item{display:flex;gap:9px;align-items:flex-start}
+.step-num{min-width:21px;height:21px;border-radius:50%;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--teal);flex-shrink:0}
+.step-txt{font-size:13px;color:var(--text2);line-height:1.6;padding-top:2px}
+.note-box{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.65;border-left:2px solid var(--accent)}
+.src-info{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);margin-top:7px}
+
+/* log from detail */
+.log-from-detail{display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border);flex-wrap:wrap}
+.lfd-btn{flex:1;min-width:120px;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s}
+.lfd-btn:hover{background:var(--surface);border-color:var(--accent);color:var(--accent)}
+.lfd-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lfd-btn.primary:hover{opacity:.88}
+
+/* status cycle */
+.status-cycle{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.sc-btn{flex:1;min-width:80px;padding:7px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s;text-align:center}
+.sc-btn.sel{border-width:1.5px}
+
+/* ── SUBMIT MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;padding:2rem 1rem}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--surface);border-radius:16px;border:0.5px solid var(--border);width:100%;max-width:500px;padding:1.6rem;margin:auto}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:3px}
+.modal-sub{font-size:13px;color:var(--text3);margin-bottom:1.2rem}
+.review-notice{background:var(--amber-bg);border:0.5px solid var(--amber-bd);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--amber);margin-bottom:1.1rem;line-height:1.6}
+.form-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.form-field label{font-size:12px;color:var(--text2);font-weight:600}
+.form-field input,.form-field select,.form-field textarea{font-size:13px;padding:8px 10px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);outline:none;font-family:inherit}
+.form-field textarea{resize:vertical;min-height:72px;line-height:1.6}
+.form-field input:focus,.form-field textarea:focus,.form-field select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;margin-top:1.1rem}
+.btn-cancel{flex:1;padding:9px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:13px}
+.btn-submit{flex:2;padding:9px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;font-weight:600}
+.btn-submit:hover{opacity:.88}
+
+/* pending */
+.pending-panel{background:var(--amber-bg);border:0.5px solid var(--amber-bd);border-radius:12px;padding:1.1rem;margin:1rem 2rem 0}
+.pending-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.pending-title{font-size:13px;font-weight:700;color:var(--amber)}
+.pending-count{font-size:11px;background:var(--amber-bd);color:#fff;border-radius:20px;padding:2px 8px;font-weight:700}
+.pending-list{display:flex;flex-direction:column;gap:6px}
+.pending-item{background:var(--surface);border-radius:8px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid var(--border)}
+.p-approve{font-size:11px;padding:4px 9px;border-radius:6px;border:0.5px solid var(--teal-bd);background:var(--teal-bg);color:var(--teal);cursor:pointer;font-weight:600;margin-left:5px}
+.p-reject{font-size:11px;padding:4px 9px;border-radius:6px;border:0.5px solid var(--coral-bd);background:var(--coral-bg);color:var(--coral);cursor:pointer;font-weight:600}
+
+/* toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.footer{border-top:0.5px solid var(--border);padding:1.2rem 2rem;font-size:12px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.footer-dot{width:4px;height:4px;border-radius:50%;background:var(--border2)}
+
+
+/* ── WEAPON ── */
+.weapon-card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:10px;transition:border-color .15s,box-shadow .15s}
+.weapon-card:hover{border-color:var(--border2);box-shadow:0 3px 12px rgba(0,0,0,.07)}
+.weapon-card.in-battle{border-color:var(--coral-bd);background:var(--coral-bg)}
+.weapon-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:.7rem}
+.weapon-name{font-size:16px;font-weight:700;color:var(--text)}
+.weapon-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--purple-bg);color:var(--purple);border:0.5px solid var(--purple-bd);white-space:nowrap}
+.weapon-tag.battle{background:var(--coral-bg);color:var(--coral);border-color:var(--coral-bd)}
+.weapon-chain{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:.8rem}
+.wc-move{font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;background:var(--surface2);color:var(--text2);display:flex;align-items:center;gap:4px}
+.wc-arrow{font-size:12px;color:var(--text3);flex-shrink:0}
+.wc-cat-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.weapon-note{font-size:12px;color:var(--text3);font-style:italic;margin-bottom:.8rem;line-height:1.5}
+.weapon-actions{display:flex;gap:6px;flex-wrap:wrap}
+.wa-btn{font-size:11px;padding:5px 11px;border-radius:7px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-weight:600;transition:all .15s}
+.wa-btn:hover{background:var(--surface2)}
+.wa-btn.battle-btn{background:var(--coral-bg);color:var(--coral);border-color:var(--coral-bd)}
+.wa-btn.battle-btn:hover{opacity:.85}
+.wa-btn.delete-btn{color:var(--text3)}
+.wa-btn.delete-btn:hover{background:var(--coral-bg);color:var(--coral);border-color:var(--coral-bd)}
+
+/* battle plan slot */
+.bp-slot{background:var(--surface);border:0.5px solid var(--coral-bd);border-radius:10px;padding:.7rem 1rem;display:flex;align-items:center;gap:10px}
+.bp-num{width:24px;height:24px;border-radius:50%;background:var(--coral-bg);color:var(--coral);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bp-info{flex:1;min-width:0}
+.bp-name{font-size:13px;font-weight:700}
+.bp-chain{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bp-remove{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 7px;border-radius:5px}
+.bp-remove:hover{color:var(--coral);background:var(--coral-bg)}
+.bp-empty{font-size:13px;color:var(--text3);padding:.8rem 1rem;background:var(--surface2);border-radius:10px;text-align:center}
+
+/* weapon editor modal */
+.we-chain-builder{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;min-height:40px}
+.we-chain-item{display:flex;align-items:center;gap:7px;background:var(--surface2);border-radius:8px;padding:7px 10px;cursor:grab;user-select:none;transition:box-shadow .15s,opacity .15s}
+.we-chain-item:active{cursor:grabbing}
+.we-chain-item.dragging{opacity:.4;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.we-chain-item.drag-over{box-shadow:0 0 0 2px var(--accent)}
+.drag-handle{color:var(--text2);font-size:18px;cursor:grab;flex-shrink:0;padding:0 4px;line-height:1;opacity:.6}
+.we-chain-name{flex:1;font-size:13px;font-weight:600}
+.we-chain-remove{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 5px}
+.we-chain-remove:hover{color:var(--coral)}
+.we-add-move{display:flex;gap:6px;align-items:center}
+.we-add-move select{flex:1;font-size:13px;padding:7px 9px;border-radius:8px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);outline:none;font-family:inherit}
+.we-add-move select:focus{border-color:var(--accent)}
+.we-add-btn{font-size:12px;padding:7px 13px;border-radius:8px;border:none;background:var(--surface2);color:var(--text2);cursor:pointer;font-weight:600;white-space:nowrap}
+.we-add-btn:hover{background:var(--border2)}
+.arrow-hint{font-size:11px;color:var(--text3);margin:.4rem 0 .6rem;display:flex;align-items:center;gap:5px}
+
+
+/* ── BATTLE MODE ── */
+.battle-mode-bg{display:none;position:fixed;inset:0;background:#0a0a08;z-index:500;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.battle-mode-bg.open{display:block}
+.bm-header{position:sticky;top:0;background:#0a0a08;padding:1rem 1.5rem .8rem;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid rgba(255,255,255,.08);z-index:1}
+.bm-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase}
+.bm-close{background:rgba(255,255,255,.1);border:none;border-radius:20px;color:#fff;font-size:13px;font-weight:600;padding:6px 16px;cursor:pointer}
+.bm-list{padding:.8rem 1.5rem 3rem}
+.bm-item{padding:1.1rem 0;border-bottom:0.5px solid rgba(255,255,255,.07)}
+.bm-item:last-child{border-bottom:none}
+.bm-num{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:5px}
+.bm-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:8px}
+.bm-chain-inline{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.bm-move-chip{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px}
+.bm-move-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bm-sep{font-size:13px;color:rgba(255,255,255,.2)}
+
+@media(max-width:600px){
+  .header,.toolbar,.grid-wrap,.lib-stats,.footer,.stats-grid,.week-grid,.today-box,.schedule-builder,.progress-list,.log-list,.recommend-box{padding-left:1rem;padding-right:1rem}
+  .today-box{margin-left:1rem;margin-right:1rem}
+  .stats-grid{margin-left:1rem;margin-right:1rem}
+  .week-grid{margin-left:1rem;margin-right:1rem;grid-template-columns:repeat(7,1fr)}
+  .week-day-label{font-size:9px}
+  .grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .search-wrap input{width:130px}
+  .cat-tabs,.toolbar{padding-left:1rem;padding-right:1rem}
+  .section-heading{padding-left:1rem}
+  .pending-panel{margin-left:1rem;margin-right:1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>Breaking 動作分類庫</h1>
+    <span class="version-tag">v4.0</span>
+  </div>
+  <div class="header-sub">Top Rock · Footwork · Power Move · Freeze — 練習記錄 · 進度追蹤 · 比賽武器庫</div>
+</div>
+
+<!-- Nav -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="goPage('today',this)">📅 今日訓練</button>
+  <button class="nav-tab" onclick="goPage('schedule',this)">🗓 週課表</button>
+  <button class="nav-tab" onclick="goPage('progress',this)">📈 學習進度</button>
+  <button class="nav-tab" onclick="goPage('history',this)">📋 練習紀錄</button>
+  <button class="nav-tab" onclick="goPage('library',this)">📚 動作庫</button>
+  <button class="nav-tab" onclick="goPage('weapon',this)">⚔️ 武器庫</button>
+</div>
+
+<!-- PAGE: 今日訓練 -->
+<div class="page active" id="page-today">
+  <div id="recommend-wrap"></div>
+  <div class="today-box" id="today-box">
+    <div class="today-header">
+      <span class="today-title" id="today-title">今日訓練</span>
+      <span class="today-date" id="today-date-label"></span>
+    </div>
+    <div class="today-body" id="today-body"></div>
+  </div>
+  <div style="margin:1rem 2rem;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="add-btn" style="background:var(--surface);color:var(--text2);border:0.5px solid var(--border2)" onclick="goPage('schedule',document.querySelectorAll('.nav-tab')[1])">⚙ 調整課表</button>
+    <button class="add-btn" onclick="openQuickLog()">＋ 快速記錄動作</button>
+  </div>
+</div>
+
+<!-- PAGE: 週課表 -->
+<div class="page" id="page-schedule">
+  <div style="padding:1.2rem 2rem .6rem">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">週課表設定</div>
+    <div style="font-size:13px;color:var(--text3)">設定每天要練哪些類別，開啟網頁自動顯示今天課表</div>
+  </div>
+  <div class="schedule-builder" id="schedule-builder"></div>
+  <div style="padding:0 2rem 1rem">
+    <button class="add-btn" onclick="saveSchedule()">儲存課表</button>
+  </div>
+  <div style="padding:0 2rem 1rem;font-size:12px;color:var(--text3)">週課表紀錄 — 最近 7 天</div>
+  <div class="week-grid" id="week-grid"></div>
+</div>
+
+<!-- PAGE: 學習進度 -->
+<div class="page" id="page-progress">
+  <div style="padding:1.2rem 2rem .6rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:3px">學習進度追蹤</div>
+      <div style="font-size:13px;color:var(--text3)">點擊動作更新你的學習狀態</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--text3)">未開始</span>
+      <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd)">學習中</span>
+      <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--blue-bg);color:var(--blue);border:0.5px solid var(--blue-bd)">練習中</span>
+      <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--teal-bg);color:var(--teal);border:0.5px solid var(--teal-bd)">已掌握</span>
+    </div>
+  </div>
+  <div class="stats-grid" id="progress-stats"></div>
+  <div class="progress-list" id="progress-list"></div>
+</div>
+
+<!-- PAGE: 練習紀錄 -->
+<div class="page" id="page-history">
+  <div style="padding:1.2rem 2rem .6rem;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:14px;font-weight:700">練習紀錄</div>
+    <button onclick="clearAllLogs()" style="font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer">清除全部</button>
+  </div>
+  <div class="log-list" id="log-list"></div>
+</div>
+
+<!-- PAGE: 動作庫 -->
+<div class="page" id="page-library">
+  <div class="cat-tabs">
+    <button class="cat-tab active" onclick="setCat('all',this)"><span class="cdot" style="background:#888"></span>全部</button>
+    <button class="cat-tab" onclick="setCat('toprock',this)"><span class="cdot" style="background:#EF9F27"></span>Top Rock</button>
+    <button class="cat-tab" onclick="setCat('footwork',this)"><span class="cdot" style="background:#7F77DD"></span>Footwork</button>
+    <button class="cat-tab" onclick="setCat('powermove',this)"><span class="cdot" style="background:#D85A30"></span>Power Move</button>
+    <button class="cat-tab" onclick="setCat('freeze',this)"><span class="cdot" style="background:#1D9E75"></span>Freeze</button>
+  </div>
+  <div class="toolbar">
+    <button class="diff-btn active" onclick="setDiff('all',this)">全部難度</button>
+    <button class="diff-btn" onclick="setDiff('beginner',this)">入門</button>
+    <button class="diff-btn" onclick="setDiff('intermediate',this)">中階</button>
+    <button class="diff-btn" onclick="setDiff('advanced',this)">進階</button>
+    <div class="search-wrap"><span class="si">🔍</span><input type="text" id="sq" placeholder="搜尋動作…" oninput="renderLibrary()"></div>
+    <button class="add-btn" onclick="openSubmit()">＋ 投稿</button>
+  </div>
+  <div class="lib-stats" id="lib-stats"></div>
+  <div id="pending-wrap"></div>
+  <div id="lib-content"></div>
+</div>
+
+
+<!-- PAGE: 武器庫 -->
+<div class="page" id="page-weapon">
+  <div style="padding:1.2rem 2rem .8rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:3px">⚔️ 比賽武器庫</div>
+      <div style="font-size:13px;color:var(--text3)">把動作串成連技，規劃比賽出場武器</div>
+    </div>
+    <div style="display:flex;gap:8px"><button class="add-btn" style="background:var(--coral);border-color:var(--coral)" onclick="openBattleMode()">⚔️ 比賽模式</button><button class="add-btn" onclick="openWeaponEditor()">＋ 新增武器</button></div>
+  </div>
+
+  <!-- Battle plan -->
+  <div style="margin:0 2rem 1.2rem">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">比賽出場規劃</div>
+    <div id="battle-plan-slots" style="display:flex;flex-direction:column;gap:6px"></div>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px">點武器卡片上的「加入出場」來規劃比賽順序</div>
+  </div>
+
+  <div style="border-top:0.5px solid var(--border);margin:0 2rem 1rem"></div>
+
+  <!-- Weapons grid -->
+  <div style="padding:0 2rem .4rem;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)" id="weapon-count-label">所有武器</div>
+  <div style="padding:.5rem 2rem 2rem" id="weapon-grid"></div>
+</div>
+
+<!-- Detail overlay -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="panel" id="panel"></div>
+</div>
+
+<!-- Quick log modal -->
+<div class="modal-bg" id="quick-log-modal" onclick="if(event.target===this)closeQuickLog()">
+  <div class="modal">
+    <h2>快速記錄動作</h2>
+    <p class="modal-sub">選擇今天練了哪個動作</p>
+    <div class="form-field"><label>選擇動作</label>
+      <select id="ql-move"></select>
+    </div>
+    <div class="form-field"><label>備注（選填）</label>
+      <input type="text" id="ql-note" placeholder="e.g. 練了 10 分鐘，平衡有進步">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeQuickLog()">取消</button>
+      <button class="btn-submit" onclick="quickLog()">記錄 ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit modal -->
+<div class="modal-bg" id="submit-modal" onclick="if(event.target===this)closeSubmit()">
+  <div class="modal" id="modal-inner">
+    <h2>投稿新動作</h2>
+    <p class="modal-sub">填寫動作資料，送出後將由管理員審核後上架</p>
+    <div class="review-notice">⏳ 審核說明：投稿內容將在 <strong>24–72 小時</strong>內完成審核，通過後才會正式收錄。</div>
+    <div class="form-row">
+      <div class="form-field"><label>英文名稱 *</label><input type="text" id="f-name-en" placeholder="e.g. 6-Step"></div>
+      <div class="form-field"><label>中文名稱 *</label><input type="text" id="f-name-zh" placeholder="e.g. 六步"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>類別 *</label>
+        <select id="f-cat"><option value="toprock">Top Rock</option><option value="footwork">Footwork</option><option value="powermove">Power Move</option><option value="freeze">Freeze</option></select>
+      </div>
+      <div class="form-field"><label>難度 *</label>
+        <select id="f-diff"><option value="beginner">入門</option><option value="intermediate">中階</option><option value="advanced">進階</option></select>
+      </div>
+    </div>
+    <div class="form-field"><label>動作說明 *</label><textarea id="f-desc" placeholder="教學要點、重心位置、常見錯誤…"></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><label>主要肌群</label><input type="text" id="f-muscles" placeholder="e.g. 股四頭肌,核心"></div>
+      <div class="form-field"><label>影片連結</label><input type="text" id="f-video" placeholder="https://..."></div>
+    </div>
+    <div class="form-field"><label>你的暱稱</label><input type="text" id="f-author" placeholder="BBoy Alex"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSubmit()">取消</button>
+      <button class="btn-submit" onclick="submitMove()">送出審核 →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="footer"><span>Breaking 動作分類庫</span><span class="footer-dot"></span><span>資料存於瀏覽器，不會上傳</span><span class="footer-dot"></span><span>v3.0</span></div>
+
+<script>
+// ── DATA ──
+const DAYS = ['日','一','二','三','四','五','六'];
+const CAT_LABEL  = {toprock:'Top Rock 站立',footwork:'Footwork 地板步',powermove:'Power Move 力量技',freeze:'Freeze 定格'};
+const CAT_COLOR  = {toprock:'#EF9F27',footwork:'#7F77DD',powermove:'#D85A30',freeze:'#1D9E75'};
+const DIFF_LABEL = {beginner:'入門',intermediate:'中階',advanced:'進階'};
+const PWR_COLORS = {upper_limb:'#378ADD',core:'#7F77DD',lower_limb:'#1D9E75',balance:'#D85A30'};
+const PWR_NAMES  = {upper_limb:'上肢',core:'核心',lower_limb:'下肢',balance:'平衡'};
+const STATUS_CFG = {
+  untouched: {label:'未開始',cls:'untouched'},
+  learning:  {label:'學習中',cls:'learning'},
+  practicing:{label:'練習中',cls:'practicing'},
+  mastered:  {label:'已掌握',cls:'mastered'}
+};
+const STATUS_CYCLE = ['untouched','learning','practicing','mastered'];
+const ADMIN_PW = 'breaking2025';
+
+let db = [];
+let pendingDB  = load('breaking_pending') || [];
+let logs       = load('breaking_logs') || [];       // [{id,moveId,date,note}]
+let progress   = load('breaking_progress') || {};   // {moveId: status}
+let schedule   = load('breaking_schedule') || {0:'rest',1:'toprock',2:'footwork',3:'powermove',4:'freeze',5:'all',6:'rest'}; // day->cat|rest|all
+let activeCat  = 'all', activeDiff = 'all', showEdit = false;
+
+function load(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function today(){return new Date().toISOString().slice(0,10)}
+function dateLabel(d){const dt=new Date(d+'T12:00:00');return `${dt.getMonth()+1}/${dt.getDate()}`}
+function todayDow(){return new Date().getDay()}
+
+// ── PAGE NAV ──
+function goPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='today') renderToday();
+  if(id==='schedule') renderSchedule();
+  if(id==='progress') renderProgress();
+  if(id==='history') renderHistory();
+  if(id==='library') renderLibrary();
+  if(id==='weapon'){ populateWeaponMoveSelect(); renderWeaponPage(); }
+}
+
+// ── STORAGE ──
+function logMove(moveId, note=''){
+  logs.unshift({id:Date.now(),moveId,date:today(),note});
+  save('breaking_logs',logs);
+  // auto set status to at least 'learning'
+  if(!progress[moveId]||progress[moveId]==='untouched'){
+    progress[moveId]='learning';
+    save('breaking_progress',progress);
+  }
+}
+
+function setStatus(moveId, status){
+  progress[moveId]=status;
+  save('breaking_progress',progress);
+}
+
+// ── TODAY PAGE ──
+function renderToday(){
+  const dow = todayDow();
+  const td  = today();
+  const dayName = DAYS[dow];
+  document.getElementById('today-date-label').textContent = new Date().toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'});
+
+  const sched = schedule[dow]; // cat key or 'rest' or 'all'
+  const todayLogs = logs.filter(l=>l.date===td);
+  const doneMoveIds = new Set(todayLogs.map(l=>l.moveId));
+
+  // Recommend
+  renderRecommend();
+
+  let bodyHtml = '';
+  if(sched==='rest'){
+    bodyHtml = `<div class="empty-today">今天是休息日 🛋️<br><span style="font-size:12px">好好恢復，明天繼續加油！</span></div>`;
+  } else {
+    const cats = sched==='all' ? ['toprock','footwork','powermove','freeze'] : [sched];
+    cats.forEach(cat=>{
+      const moves = db.filter(m=>m.category===cat);
+      if(!moves.length) return;
+      // pick 2–3 moves per cat: prioritize learning/practicing, then untouched
+      const pick = pickForToday(moves);
+      bodyHtml += `<div class="today-section">
+        <div class="today-section-label" style="color:${CAT_COLOR[cat]}">${CAT_LABEL[cat]}</div>
+        <div class="today-moves">
+          ${pick.map(m=>`
+            <div class="today-move" onclick="showDetail(${m.id})">
+              <div class="cat-stripe" style="background:${CAT_COLOR[m.category]}"></div>
+              <div class="today-move-info">
+                <div class="today-move-name">${m.name} <span style="font-weight:400;color:var(--text3);font-size:12px">${m.nameZh||''}</span></div>
+                <div class="today-move-sub">${DIFF_LABEL[m.difficulty]} · ${statusLabel(m.id)}</div>
+              </div>
+              <div class="today-move-done ${doneMoveIds.has(m.id)?'done':''}" onclick="event.stopPropagation();toggleTodayDone(${m.id},this)" title="標記完成"></div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    });
+    if(!bodyHtml) bodyHtml = `<div class="empty-today">課表為空，請先設定週課表</div>`;
+  }
+
+  // today log summary
+  if(todayLogs.length){
+    bodyHtml += `<div class="today-section" style="margin-top:.5rem">
+      <div class="today-section-label">今天已記錄 ${todayLogs.length} 個動作</div>
+      <div class="today-moves">
+        ${todayLogs.slice(0,5).map(l=>{
+          const m=db.find(x=>x.id===l.moveId)||{name:'?',category:'freeze'};
+          return `<div class="today-move" style="cursor:default">
+            <div class="cat-stripe" style="background:${CAT_COLOR[m.category]||'#888'}"></div>
+            <div class="today-move-info">
+              <div class="today-move-name">${m.name}</div>
+              <div class="today-move-sub">${l.note||'已練習'}</div>
+            </div>
+            <span style="font-size:16px">✓</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('today-body').innerHTML = bodyHtml;
+  document.getElementById('today-title').textContent = sched==='rest' ? '今日休息' : `今日訓練 — 週${dayName}`;
+}
+
+function pickForToday(moves){
+  const byStatus = {learning:[],practicing:[],untouched:[],mastered:[]};
+  moves.forEach(m=>{
+    const s = progress[m.id]||'untouched';
+    byStatus[s].push(m);
+  });
+  let pick = [...byStatus.learning.slice(0,2), ...byStatus.practicing.slice(0,1)];
+  if(pick.length<3) pick.push(...byStatus.untouched.slice(0,3-pick.length));
+  if(pick.length<2) pick.push(...byStatus.mastered.slice(0,2-pick.length));
+  return pick.slice(0,3);
+}
+
+function toggleTodayDone(moveId, el){
+  const td = today();
+  const already = logs.find(l=>l.moveId===moveId && l.date===td);
+  if(already){
+    logs = logs.filter(l=>!(l.moveId===moveId && l.date===td));
+    el.classList.remove('done');
+    showToast('已取消記錄');
+  } else {
+    logMove(moveId,'今日課表訓練');
+    el.classList.add('done');
+    showToast('已記錄 ✓');
+  }
+  save('breaking_logs',logs);
+}
+
+function statusLabel(moveId){
+  const s = progress[moveId]||'untouched';
+  return STATUS_CFG[s].label;
+}
+
+// ── RECOMMEND ──
+function renderRecommend(){
+  const recs = getRecommendations();
+  if(!recs.length){document.getElementById('recommend-wrap').innerHTML='';return;}
+  document.getElementById('recommend-wrap').innerHTML = `
+    <div class="recommend-box">
+      <div class="recommend-title">🎯 建議下次重點練習</div>
+      <div class="recommend-moves">
+        ${recs.map(r=>`
+          <div class="rec-move" onclick="showDetail(${r.move.id})">
+            <div class="cat-stripe" style="background:${CAT_COLOR[r.move.category]};height:28px;width:4px;border-radius:2px;flex-shrink:0"></div>
+            <div class="rec-move-info">
+              <div class="rec-move-name">${r.move.name} <span style="font-weight:400;color:var(--text3);font-size:12px">${r.move.nameZh||''}</span></div>
+              <div class="rec-move-reason">${r.reason}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function getRecommendations(){
+  if(!db.length) return [];
+  const recs = [];
+  // 1. learning but not logged recently
+  db.forEach(m=>{
+    if(progress[m.id]==='learning'){
+      const lastLog = logs.find(l=>l.moveId===m.id);
+      const daysAgo = lastLog ? Math.floor((Date.now()-new Date(lastLog.date+'T12:00:00'))/(86400000)) : 99;
+      if(daysAgo>=2) recs.push({move:m, score:100-daysAgo, reason:`學習中 · 上次練習 ${daysAgo>=99?'未記錄':daysAgo+'天前'}`});
+    }
+  });
+  // 2. practicing
+  db.forEach(m=>{
+    if(progress[m.id]==='practicing'){
+      const lastLog = logs.find(l=>l.moveId===m.id);
+      const daysAgo = lastLog ? Math.floor((Date.now()-new Date(lastLog.date+'T12:00:00'))/(86400000)) : 99;
+      if(daysAgo>=3) recs.push({move:m, score:80-daysAgo, reason:`練習中 · 持續練習幫助鞏固`});
+    }
+  });
+  // 3. suggest next untouched by category
+  ['toprock','footwork','powermove','freeze'].forEach(cat=>{
+    const next = db.find(m=>m.category===cat && (!progress[m.id]||progress[m.id]==='untouched') && m.difficulty==='beginner');
+    if(next) recs.push({move:next, score:10, reason:`推薦入門 ${CAT_LABEL[cat]}`});
+  });
+  // deduplicate & take top 3
+  const seen = new Set();
+  return recs.filter(r=>{if(seen.has(r.move.id))return false;seen.add(r.move.id);return true;})
+    .sort((a,b)=>b.score-a.score).slice(0,3);
+}
+
+// ── SCHEDULE ──
+function renderSchedule(){
+  const sb = document.getElementById('schedule-builder');
+  sb.innerHTML = DAYS.map((d,i)=>`
+    <div class="sb-row">
+      <span class="sb-day-label">週${d}</span>
+      <div class="sb-cats">
+        <button class="sb-rest ${schedule[i]==='rest'?'active':''}" onclick="toggleSchedCat(${i},'rest',this)">休息</button>
+        ${Object.entries(CAT_LABEL).map(([k,label])=>`
+          <button class="sb-cat-btn ${schedule[i]===k?'active':''}" style="${schedule[i]===k?`background:${CAT_COLOR[k]};color:#fff;border-color:${CAT_COLOR[k]}`:''}" onclick="toggleSchedCat(${i},'${k}',this)">${label.split(' ')[0]}</button>
+        `).join('')}
+        <button class="sb-cat-btn ${schedule[i]==='all'?'active':''}" style="${schedule[i]==='all'?'background:var(--text);color:var(--bg);border-color:var(--text)':''}" onclick="toggleSchedCat(${i},'all',this)">全部</button>
+      </div>
+    </div>`).join('');
+
+  // week log grid
+  const wg = document.getElementById('week-grid');
+  const now = new Date();
+  wg.innerHTML = DAYS.map((d,i)=>{
+    const dt = new Date(now); dt.setDate(now.getDate()-(now.getDay()-i+7)%7);
+    const dateStr = dt.toISOString().slice(0,10);
+    const dayLogs = logs.filter(l=>l.date===dateStr);
+    const isToday = dateStr===today();
+    const cats = [...new Set(dayLogs.map(l=>{const m=db.find(x=>x.id===l.moveId);return m?m.category:null}).filter(Boolean))];
+    return `<div class="week-day ${isToday?'today-col':''} ${dayLogs.length?'has-log':''}">
+      <div class="week-day-label">週${d}<br>${dt.getMonth()+1}/${dt.getDate()}</div>
+      <div class="week-day-cats">
+        ${cats.map(c=>`<div class="week-dot" style="background:${CAT_COLOR[c]}"></div>`).join('')}
+        ${!cats.length && dayLogs.length ? '<div class="week-dot" style="background:var(--accent)"></div>' : ''}
+        ${!dayLogs.length ? '<span style="font-size:10px;color:var(--border2)">—</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSchedCat(dow, cat, btn){
+  schedule[dow]=cat;
+  // update UI
+  const row = btn.closest('.sb-row');
+  row.querySelectorAll('.sb-cat-btn,.sb-rest').forEach(b=>{
+    b.classList.remove('active');
+    b.style.background=''; b.style.color=''; b.style.borderColor='';
+  });
+  btn.classList.add('active');
+  if(cat==='rest'||cat==='all'){btn.style.background='var(--text)';btn.style.color='var(--bg)';btn.style.borderColor='var(--text)';}
+  else{btn.style.background=CAT_COLOR[cat];btn.style.color='#fff';btn.style.borderColor=CAT_COLOR[cat];}
+}
+
+function saveSchedule(){
+  save('breaking_schedule',schedule);
+  showToast('課表已儲存 ✓');
+}
+
+// ── PROGRESS ──
+function renderProgress(){
+  // stats
+  const total = db.length;
+  const byStatus = {untouched:0,learning:0,practicing:0,mastered:0};
+  db.forEach(m=>{byStatus[progress[m.id]||'untouched']++;});
+  document.getElementById('progress-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">總動作數</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">學習中</div><div class="stat-value" style="color:var(--amber)">${byStatus.learning}</div></div>
+    <div class="stat-card"><div class="stat-label">練習中</div><div class="stat-value" style="color:var(--blue)">${byStatus.practicing}</div></div>
+    <div class="stat-card"><div class="stat-label">已掌握</div><div class="stat-value" style="color:var(--accent)">${byStatus.mastered}</div></div>`;
+
+  // list by category
+  const cats = ['toprock','footwork','powermove','freeze'];
+  let html = '';
+  cats.forEach(cat=>{
+    const moves = db.filter(m=>m.category===cat);
+    if(!moves.length) return;
+    html += `<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${CAT_COLOR[cat]};margin:1rem 0 .5rem;padding:0 0">${CAT_LABEL[cat]}</div>`;
+    html += moves.map(m=>{
+      const s = progress[m.id]||'untouched';
+      const cfg = STATUS_CFG[s];
+      const cnt = logs.filter(l=>l.moveId===m.id).length;
+      return `<div class="prog-item" onclick="cycleStatus(${m.id},this)">
+        <div class="cat-stripe" style="background:${CAT_COLOR[m.category]};height:36px;width:4px;border-radius:2px;flex-shrink:0"></div>
+        <div class="prog-info">
+          <div class="prog-name">${m.name} <span style="font-weight:400;color:var(--text3)">${m.nameZh||''}</span></div>
+          <div class="prog-sub">${DIFF_LABEL[m.difficulty]}</div>
+        </div>
+        <div class="prog-log-count">${cnt?cnt+'次':''}</div>
+        <button class="prog-status-btn ${cfg.cls}" onclick="event.stopPropagation();cycleStatus(${m.id},null)">${cfg.label}</button>
+      </div>`;
+    }).join('');
+  });
+  document.getElementById('progress-list').innerHTML = html;
+}
+
+function cycleStatus(moveId, row){
+  const cur = progress[moveId]||'untouched';
+  const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];
+  setStatus(moveId,next);
+  renderProgress();
+  showToast(`${STATUS_CFG[next].label} ✓`);
+}
+
+// ── HISTORY ──
+function renderHistory(){
+  if(!logs.length){
+    document.getElementById('log-list').innerHTML='<div class="empty">還沒有練習紀錄</div>';
+    return;
+  }
+  // group by date
+  const byDate = {};
+  logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
+  let html='';
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    html+=`<div class="log-day-group">
+      <div class="log-day-label">${date===today()?'今天':dateLabel(date)} · ${byDate[date].length} 個動作</div>
+      ${byDate[date].map(l=>{
+        const m=db.find(x=>x.id===l.moveId)||{name:'未知動作',category:'freeze'};
+        return `<div class="log-entry">
+          <div class="cat-stripe" style="background:${CAT_COLOR[m.category]||'#888'};height:28px;width:4px;border-radius:2px;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div class="log-entry-name">${m.name}</div>
+            ${l.note?`<div class="log-entry-sub">${l.note}</div>`:''}
+          </div>
+          <button class="log-delete" onclick="deleteLog(${l.id})">✕</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  document.getElementById('log-list').innerHTML=html;
+}
+
+function deleteLog(id){
+  logs=logs.filter(l=>l.id!==id);
+  save('breaking_logs',logs);
+  renderHistory();
+}
+
+function clearAllLogs(){
+  if(!confirm('確定清除所有練習紀錄？')) return;
+  logs=[];save('breaking_logs',logs);renderHistory();showToast('已清除');
+}
+
+// ── QUICK LOG ──
+function openQuickLog(){
+  const sel=document.getElementById('ql-move');
+  sel.innerHTML=db.map(m=>`<option value="${m.id}">[${CAT_LABEL[m.category].split(' ')[0]}] ${m.name} ${m.nameZh||''}</option>`).join('');
+  document.getElementById('quick-log-modal').classList.add('open');
+}
+function closeQuickLog(){document.getElementById('quick-log-modal').classList.remove('open');}
+function quickLog(){
+  const moveId=parseInt(document.getElementById('ql-move').value);
+  const note=document.getElementById('ql-note').value.trim();
+  logMove(moveId,note||'快速記錄');
+  save('breaking_logs',logs);
+  closeQuickLog();
+  document.getElementById('ql-note').value='';
+  showToast('已記錄 ✓');
+  renderToday();
+}
+
+// ── LIBRARY ──
+function setCat(c,btn){activeCat=c;document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLibrary();}
+function setDiff(d,btn){activeDiff=d;document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLibrary();}
+
+function renderLibrary(){
+  const q=(document.getElementById('sq')||{}).value||'';
+  const filtered=db.filter(m=>{
+    if(activeCat!=='all'&&m.category!==activeCat)return false;
+    if(activeDiff!=='all'&&m.difficulty!==activeDiff)return false;
+    if(q&&!m.name.toLowerCase().includes(q.toLowerCase())&&!(m.nameZh||'').includes(q)&&!(m.muscles||[]).join().toLowerCase().includes(q.toLowerCase()))return false;
+    return true;
+  });
+  const estimated=filtered.filter(m=>m.power_index.source==='estimated').length;
+  const measured=filtered.filter(m=>m.power_index.source==='measured').length;
+  document.getElementById('lib-stats').innerHTML=`<span>顯示 <b>${filtered.length}</b> 個動作</span><span><span class="src-dot src-mea" style="display:inline-block;margin-right:3px;vertical-align:middle"></span>實測 <b>${measured}</b></span><span><span class="src-dot src-est" style="display:inline-block;margin-right:3px;vertical-align:middle"></span>預估 <b>${estimated}</b></span>`;
+  const cats=activeCat==='all'?['toprock','footwork','powermove','freeze']:[activeCat];
+  let html='';
+  cats.forEach(cat=>{
+    const items=filtered.filter(m=>m.category===cat);
+    if(!items.length)return;
+    html+=`<div class="section-heading"><span class="sh-dot" style="background:${CAT_COLOR[cat]}"></span>${CAT_LABEL[cat]}<span style="font-weight:400;color:var(--text3)">${items.length}</span></div>
+    <div class="grid-wrap"><div class="grid">${items.map(m=>renderCard(m)).join('')}</div></div>`;
+  });
+  if(!html)html='<div class="grid-wrap"><div class="empty">沒有符合條件的動作</div></div>';
+  document.getElementById('lib-content').innerHTML=html;
+}
+
+function renderCard(m){
+  const pi=m.power_index;
+  const bar=pi.total>=70?'#D85A30':pi.total>=50?'#EF9F27':'#1D9E75';
+  const s=progress[m.id]||'untouched';
+  const cfg=STATUS_CFG[s];
+  return `<div class="card" onclick="showDetail(${m.id})">
+    <div class="card-stripe" style="background:${CAT_COLOR[m.category]}"></div>
+    <div class="card-head"><div><div class="card-name-en">${m.name}</div><div class="card-name-zh">${m.nameZh||''}</div></div>
+    <span class="badge badge-${m.difficulty}">${DIFF_LABEL[m.difficulty]}</span></div>
+    <div class="stag-row">${(m.support_points||[]).map(s=>`<span class="stag">${s}</span>`).join('')}</div>
+    <div class="pwr-row"><span class="pwr-lbl">功率</span><div class="pwr-bg"><div class="pwr-fill" style="width:${pi.total}%;background:${bar}"></div></div><span class="pwr-v">${pi.total}</span></div>
+    <div class="stag-row">${(m.muscles||[]).slice(0,3).map(s=>`<span class="stag">${s}</span>`).join('')}${(m.muscles||[]).length>3?`<span class="stag">+${m.muscles.length-3}</span>`:''}</div>
+    <div class="card-foot">
+      <span class="src-dot ${pi.source==='measured'?'src-mea':'src-est'}"></span>
+      <span class="card-src-txt" style="flex:1">${pi.source==='measured'?`實測 · ${pi.measured_at||''}`:'預估'}</span>
+      <span class="prog-status-btn ${cfg.cls}" style="font-size:10px;padding:2px 7px">${cfg.label}</span>
+    </div>
+  </div>`;
+}
+
+// ── DETAIL ──
+function showDetail(id){
+  const m=db.find(x=>x.id===id)||pendingDB.find(x=>x.id===id);
+  if(!m)return;
+  showEdit=false;
+  renderDetail(m);
+  document.getElementById('overlay').classList.add('open');
+}
+
+function renderDetail(m){
+  const pi=m.power_index||{upper_limb:0,core:0,lower_limb:0,balance:0,total:0,source:'estimated'};
+  const s=progress[m.id]||'untouched';
+  const td=today();
+  const loggedToday=logs.some(l=>l.moveId===m.id&&l.date===td);
+  const pwrRows=Object.entries(PWR_NAMES).map(([k,label])=>`
+    <div class="pwr-d-row"><span class="pwr-d-lbl">${label}</span>
+    <div class="pwr-d-bar"><div class="pwr-d-fill" style="width:${pi[k]||0}%;background:${PWR_COLORS[k]}"></div></div>
+    <span class="pwr-d-val" style="color:${PWR_COLORS[k]}">${pi[k]||0}</span></div>`).join('');
+
+  const statusBtns=STATUS_CYCLE.map(st=>`<button class="sc-btn ${s===st?'sel':''}" style="${s===st?`background:${st==='mastered'?'var(--teal-bg)':st==='practicing'?'var(--blue-bg)':st==='learning'?'var(--amber-bg)':'var(--surface2)'};color:${st==='mastered'?'var(--teal)':st==='practicing'?'var(--blue)':st==='learning'?'var(--amber)':'var(--text3)'};border-color:${st==='mastered'?'var(--teal-bd)':st==='practicing'?'var(--blue-bd)':st==='learning'?'var(--amber-bd)':'var(--border2)'}`:''}" onclick="setStatus(${m.id},'${st}');renderDetail(db.find(x=>x.id===${m.id})||pendingDB.find(x=>x.id===${m.id}));if(document.getElementById('page-progress').classList.contains('active'))renderProgress()">${STATUS_CFG[st].label}</button>`).join('');
+
+  const cc=CAT_COLOR[m.category]||'#888';
+  document.getElementById('panel').innerHTML=`
+    <div style="height:3px;border-radius:2px;background:${cc};margin-bottom:1.2rem"></div>
+    <div class="panel-top">
+      <div class="panel-titles">
+        <span style="font-size:11px;font-weight:700;color:${cc};text-transform:uppercase;letter-spacing:.08em">${CAT_LABEL[m.category]||''}</span>
+        <span class="panel-name-en">${m.name}</span>
+        <span class="panel-name-zh">${m.nameZh||''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="badge badge-${m.difficulty}">${DIFF_LABEL[m.difficulty]}</span>
+        <button class="close-btn" onclick="closeDetail()">×</button>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-lbl">學習狀態</div><div class="status-cycle">${statusBtns}</div></div>
+    ${(m.support_points||[]).length?`<div class="sec"><div class="sec-lbl">支撐點</div><div class="tag-row">${m.support_points.map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>`:''}
+    <div class="sec"><div class="sec-lbl">功率指標（0–100）</div>${pwrRows}
+      <div class="pwr-total"><span>綜合功率指數</span><span>${pi.total}</span></div>
+      <div class="src-info"><span class="src-dot ${pi.source==='measured'?'src-mea':'src-est'}"></span>${pi.source==='measured'?`實測 · ${pi.measured_at||''} · ${pi.measured_by||''}`:'預估值'}</div>
+    </div>
+    ${(m.muscles||[]).length?`<div class="sec"><div class="sec-lbl">主要肌群</div><div class="tag-row">${m.muscles.map(s=>`<span class="tag muscle-tag">${s}</span>`).join('')}</div></div>`:''}
+    ${(m.steps||[]).length?`<div class="sec"><div class="sec-lbl">教學步驟</div><div class="step-list">${m.steps.map((s,i)=>`<div class="step-item"><span class="step-num">${i+1}</span><span class="step-txt">${s}</span></div>`).join('')}</div></div>`:''}
+    ${(m.variants||[]).length?`<div class="sec"><div class="sec-lbl">變化型</div><div class="tag-row">${m.variants.map(s=>`<span class="tag variant-tag">${s}</span>`).join('')}</div></div>`:''}
+    ${m.note?`<div class="sec"><div class="sec-lbl">備注</div><div class="note-box">${m.note}</div></div>`:''}
+    <div class="log-from-detail">
+      <button class="lfd-btn primary" onclick="logFromDetail(${m.id})">${loggedToday?'今天已記錄 ✓':'記錄今天練了這個 ✓'}</button>
+    </div>`;
+}
+
+function logFromDetail(moveId){
+  logMove(moveId,'');
+  save('breaking_logs',logs);
+  const m=db.find(x=>x.id===moveId);
+  showToast(`${m?m.name:'動作'} 已記錄 ✓`);
+  renderDetail(db.find(x=>x.id===moveId));
+  renderToday();
+}
+
+function closeDetail(){document.getElementById('overlay').classList.remove('open');showEdit=false;}
+function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))closeDetail();}
+
+// ── SUBMIT ──
+function openSubmit(){document.getElementById('submit-modal').classList.add('open');}
+function closeSubmit(){document.getElementById('submit-modal').classList.remove('open');}
+function submitMove(){
+  const nameEn=document.getElementById('f-name-en').value.trim();
+  const nameZh=document.getElementById('f-name-zh').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  if(!nameEn||!nameZh||!desc){showToast('請填寫必填欄位（*）');return;}
+  const entry={id:Date.now(),category:document.getElementById('f-cat').value,name:nameEn,nameZh,difficulty:document.getElementById('f-diff').value,
+    support_points:[],muscles:document.getElementById('f-muscles').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+    note:desc,video_url:document.getElementById('f-video').value.trim(),
+    author:document.getElementById('f-author').value.trim()||'匿名',
+    submitted_at:today(),status:'pending',
+    power_index:{upper_limb:0,core:0,lower_limb:0,balance:0,total:0,source:'estimated'},steps:[],variants:[]};
+  pendingDB.push(entry);save('breaking_pending',pendingDB);
+  closeSubmit();
+  ['f-name-en','f-name-zh','f-desc','f-muscles','f-video','f-author'].forEach(id=>document.getElementById(id).value='');
+  renderPending();showToast('投稿成功！審核中 ⏳');
+}
+
+function renderPending(){
+  const wrap=document.getElementById('pending-wrap');
+  if(!wrap||!pendingDB.length){if(wrap)wrap.innerHTML='';return;}
+  wrap.innerHTML=`<div class="pending-panel">
+    <div class="pending-header"><span class="pending-title">⏳ 待審核投稿</span><span class="pending-count">${pendingDB.length}</span></div>
+    <div class="pending-list">${pendingDB.map(p=>`
+      <div class="pending-item">
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${p.name} <span style="font-weight:400;color:var(--text3)">${p.nameZh}</span></div>
+        <div style="font-size:11px;color:var(--text3)">${DIFF_LABEL[p.difficulty]} · ${p.author} · ${p.submitted_at}</div></div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="p-approve" onclick="approvePending(${p.id})">通過</button>
+          <button class="p-reject" onclick="rejectPending(${p.id})">退回</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function approvePending(id){
+  const pw=prompt('管理員密碼：');if(pw!==ADMIN_PW){showToast('密碼錯誤');return;}
+  const idx=pendingDB.findIndex(x=>x.id===id);if(idx===-1)return;
+  db.push({...pendingDB[idx],status:'approved'});
+  pendingDB.splice(idx,1);save('breaking_pending',pendingDB);
+  renderPending();renderLibrary();showToast('已通過審核 ✓');
+}
+function rejectPending(id){
+  const pw=prompt('管理員密碼：');if(pw!==ADMIN_PW){showToast('密碼錯誤');return;}
+  pendingDB=pendingDB.filter(x=>x.id!==id);save('breaking_pending',pendingDB);renderPending();showToast('已退回');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── INIT ──
+const FALLBACK_DB=[
+  {id:101,category:"toprock",name:"Indian Step",nameZh:"印地安步",difficulty:"beginner",support_points:["雙腳交替"],muscles:["股四頭肌","臀大肌","腓腸肌"],power_index:{upper_limb:20,core:30,lower_limb:60,balance:50,total:40,source:"estimated",measured_at:null,measured_by:null},steps:["雙腳與肩同寬站立","右腳向前踏，同時左臂前擺","左腳跟上，重複交替","加入上半身扭轉增加節奏感","配合音樂 Downbeat 做重音"],variants:["Brooklyn Rock","Latin Rock"],note:"Breaking 最基礎的 Top Rock，重點在上下半身的協調與律動感。"},
+  {id:102,category:"toprock",name:"Salsa Rock",nameZh:"莎莎步",difficulty:"beginner",support_points:["雙腳"],muscles:["髖屈肌","臀中肌","腓腸肌","腹斜肌"],power_index:{upper_limb:25,core:40,lower_limb:55,balance:45,total:41,source:"estimated",measured_at:null,measured_by:null},steps:["右腳向右踏出一步","左腳收至右腳旁","重心左移，左腳踏出","配合手臂自然擺動","保持膝蓋微彎，重心低"],variants:["Latin Rock","Mambo Rock"],note:"源自 Latin 舞蹈，律動感強烈，適合搭配有 Clave 節奏的 Breakbeat。"},
+  {id:103,category:"toprock",name:"Brooklyn Rock",nameZh:"布魯克林步",difficulty:"intermediate",support_points:["雙腳"],muscles:["股四頭肌","臀大肌","腹斜肌","三角肌"],power_index:{upper_limb:35,core:45,lower_limb:60,balance:50,total:48,source:"estimated",measured_at:null,measured_by:null},steps:["雙腳站立，膝蓋微彎","右腳向右前方踏出交叉","身體隨之轉向右側","左腳迅速補位恢復平衡","雙手輔助做身體扭轉造型"],variants:["Side Rock","Cross Step Rock"],note:"強調上半身的傾斜與扭轉，是展示個人風格的重要 Top Rock 之一。"},
+  {id:104,category:"toprock",name:"Kick Step",nameZh:"踢腳步",difficulty:"beginner",support_points:["單腳站立"],muscles:["髖屈肌","股四頭肌","臀大肌"],power_index:{upper_limb:15,core:35,lower_limb:65,balance:55,total:43,source:"estimated",measured_at:null,measured_by:null},steps:["重心放在左腳","右腳向前踢出（膝蓋伸直）","右腳落地時順勢踏步","交替左右腳練習","踢腿高度隨能力逐漸提高"],variants:["Side Kick","Back Kick Step"],note:"訓練單腳平衡與髖部靈活度，踢腿動作要乾脆俐落有力。"},
+  {id:201,category:"footwork",name:"6-Step",nameZh:"六步",difficulty:"beginner",support_points:["雙手","雙腳交替"],muscles:["肱三頭肌","三角肌","股四頭肌","腓腸肌","核心"],power_index:{upper_limb:40,core:50,lower_limb:55,balance:45,total:48,source:"estimated",measured_at:null,measured_by:null},steps:["從撐地姿勢開始，雙手撐地","右腳向右跨出（第1步）","左腳跟上移至右腳後方（第2步）","重心轉移，右腳向右後移（第3步）","左腳向前跨（第4步）","完成循環回到起始位置（5、6步）"],variants:["4-Step","3-Step","CC"],note:"Footwork 的基礎骨架，所有地板步皆由此衍生。"},
+  {id:202,category:"footwork",name:"CC (Crazy Legs)",nameZh:"瘋腿",difficulty:"intermediate",support_points:["雙手","雙腳"],muscles:["股四頭肌","臀大肌","腹橫肌","腓腸肌"],power_index:{upper_limb:45,core:60,lower_limb:70,balance:55,total:58,source:"estimated",measured_at:null,measured_by:null},steps:["從 6-Step 姿勢出發","雙腿快速交叉擺動","腿部動作類似剪刀開合","保持手臂穩定撐地","速度越快越具視覺衝擊"],variants:["6-Step CC combo","Reverse CC"],note:"CC 是 Footwork 的核心技巧之一，關鍵在腿部的速度與協調。"},
+  {id:203,category:"footwork",name:"3-Step",nameZh:"三步",difficulty:"beginner",support_points:["雙手","雙腳"],muscles:["核心","臀大肌","股四頭肌"],power_index:{upper_limb:35,core:45,lower_limb:50,balance:40,total:43,source:"estimated",measured_at:null,measured_by:null},steps:["撐地姿勢起始","一腳向外側踏出","另一腳跟上交叉","第三步回到起始位置","加快節奏形成流暢循環"],variants:["2-Step","4-Step"],note:"比六步更精簡的地板步，節奏更快，適合接連到 Power Move 前的銜接動作。"},
+  {id:204,category:"footwork",name:"Helicopter",nameZh:"直升機步",difficulty:"intermediate",support_points:["單手","雙腳"],muscles:["肱三頭肌","前鋸肌","股四頭肌","腹斜肌"],power_index:{upper_limb:60,core:65,lower_limb:60,balance:65,total:63,source:"estimated",measured_at:null,measured_by:null},steps:["單手撐地（右手）","左腳從右手前方掃過","右腳從右手後方掃過","形成腿部繞手旋轉的效果","可連續旋轉多圈"],variants:["Two Hand Heli","Heli to Freeze"],note:"視覺效果強烈的 Footwork，關鍵在掃腿的時機與單手支撐的穩定度。"},
+  {id:205,category:"footwork",name:"Zulu Spin",nameZh:"祖魯旋轉",difficulty:"intermediate",support_points:["臀部","雙手"],muscles:["腹斜肌","臀大肌","肱三頭肌"],power_index:{upper_limb:50,core:65,lower_limb:45,balance:60,total:55,source:"estimated",measured_at:null,measured_by:null},steps:["坐在地板上，雙手撐地","抬起臀部用手和腳推進旋轉","利用慣性帶動身體順時針或逆時針轉","核心收緊維持旋轉穩定","可用腿型造型增加難度"],variants:["Butt Spin","Crab Walk"],note:"趣味性強的地板動作，適合在 Footwork 組合中穿插使用。"},
+  {id:301,category:"powermove",name:"Windmill",nameZh:"風車",difficulty:"intermediate",support_points:["肩膀","上背"],muscles:["三角肌","斜方肌","豎脊肌","臀大肌","核心"],power_index:{upper_limb:70,core:80,lower_limb:65,balance:72,total:72,source:"estimated",measured_at:null,measured_by:null},steps:["從地板俯趴姿勢開始","單肩著地，雙腿張開呈V字","利用肩膀為軸心帶動身體旋轉","背部滾動接另一側肩膀","雙腿維持伸直或張開造型"],variants:["Shoulder Windmill","Elbow Windmill","Jackhammer"],note:"Breaking 最經典的 Power Move 之一。"},
+  {id:302,category:"powermove",name:"Headspin",nameZh:"頭轉",difficulty:"advanced",support_points:["頭頂"],muscles:["頸部肌群","斜方肌","核心","上肢"],power_index:{upper_limb:65,core:85,lower_limb:70,balance:90,total:78,source:"estimated",measured_at:null,measured_by:null},steps:["頭頂著地，找到平衡點（約前1/3）","雙腿踢出產生旋轉動力","雙腿收緊（tuck）加速旋轉","核心持續用力維持旋轉","可用手輔助維持或加速"],variants:["Headstand Spin","Drill","Headspin to Freeze"],note:"需要充分的頸部保護訓練。建議戴護具練習，並在軟墊上循序漸進。"},
+  {id:303,category:"powermove",name:"Flare",nameZh:"托馬斯旋轉",difficulty:"advanced",support_points:["雙手交替"],muscles:["肱三頭肌","三角肌","前鋸肌","腹斜肌","髖屈肌"],power_index:{upper_limb:92,core:88,lower_limb:75,balance:85,total:85,source:"estimated",measured_at:null,measured_by:null},steps:["從撐地姿勢開始","單手撐起，雙腿張開水平旋轉","雙腿要維持完全伸直","手交替支撐帶動連續旋轉","雙腿畫圈高度盡量保持一致"],variants:["Airflare","1-Hand Flare","Flare to Windmill"],note:"需要極強的手腕與肩部力量。建議先能穩定完成 Airchair 後再嘗試。"},
+  {id:304,category:"powermove",name:"Backspin",nameZh:"背轉",difficulty:"beginner",support_points:["上背","肩膀"],muscles:["斜方肌","豎脊肌","核心","臀大肌"],power_index:{upper_limb:30,core:60,lower_limb:55,balance:55,total:50,source:"estimated",measured_at:null,measured_by:null},steps:["背部著地，雙腿踢出","利用慣性帶動背部旋轉","雙腿可伸直或收緊（加速）","核心收緊控制旋轉方向","可嘗試連接 Freeze 結尾"],variants:["Backspin to Freeze","Turtle Spin"],note:"Power Move 中最友善的入門動作，身體接觸地板面積大，相對安全。"},
+  {id:305,category:"powermove",name:"Airflare",nameZh:"空中旋轉",difficulty:"advanced",support_points:["單手交替"],muscles:["肱三頭肌","三角肌","前鋸肌","核心","髖屈肌"],power_index:{upper_limb:95,core:90,lower_limb:70,balance:92,total:87,source:"estimated",measured_at:null,measured_by:null},steps:["從 Flare 基礎進化而來","單手支撐時身體完全騰空","雙腿在空中保持伸直旋轉","落地時另一手接替支撐","需要極高的空間感與時機掌握"],variants:["Airflare to Freeze","Airflare Combo"],note:"Breaking 頂級技術之一，需數年系統訓練。"},
+  {id:1,category:"freeze",name:"Baby Freeze",nameZh:"嬰兒定格",difficulty:"beginner",support_points:["手肘","頭側"],muscles:["三角肌","肱三頭肌","腹橫肌","髖屈肌"],power_index:{upper_limb:30,core:40,lower_limb:20,balance:60,total:38,source:"estimated",measured_at:null,measured_by:null},steps:["雙膝跪地，雙手撐地","右手肘彎曲，讓頭側靠在右手肘上","左手撐地保持平衡","慢慢讓雙腳離地，保持靜止","收緊核心維持3秒以上"],variants:["Double Baby Freeze","Elbow Baby","One Leg Baby"],note:"最推薦入門的 Freeze，手肘作為支點能大幅降低平衡難度。"},
+  {id:2,category:"freeze",name:"Chair Freeze",nameZh:"椅子定格",difficulty:"intermediate",support_points:["單手肘","腰側"],muscles:["肱三頭肌","前鋸肌","腹斜肌","臀中肌"],power_index:{upper_limb:55,core:65,lower_limb:30,balance:70,total:55,source:"estimated",measured_at:null,measured_by:null},steps:["側身，右手肘彎曲頂住右側腰部","左手撐地輔助平衡","核心收緊，讓身體側向離地","雙腳可伸直或彎曲","保持頭部放鬆，眼睛看地板"],variants:["High Chair","One Arm Chair","Chair to Headstand"],note:"手肘頂腰的位置非常關鍵，約在腰骨上方。"},
+  {id:3,category:"freeze",name:"Headstand Freeze",nameZh:"頭倒立定格",difficulty:"intermediate",support_points:["頭頂","雙手"],muscles:["頸部肌群","斜方肌","三角肌","腹直肌"],power_index:{upper_limb:50,core:70,lower_limb:40,balance:75,total:59,source:"estimated",measured_at:null,measured_by:null},steps:["雙手與頭頂形成三角形支撐點","頭頂輕放地板，非頸部承重","核心用力將雙腿緩緩抬起","雙腿可合攏或張開","保持呼吸，不要屏氣"],variants:["Stab","Headstand to Spin","Tripod"],note:"頭頂接觸點應在頭頂前三分之一，三點要形成穩定等邊三角形。"},
+  {id:4,category:"freeze",name:"Elbow Freeze",nameZh:"手肘定格",difficulty:"intermediate",support_points:["雙手肘"],muscles:["肱三頭肌","胸大肌","前鋸肌","腹橫肌"],power_index:{upper_limb:70,core:75,lower_limb:25,balance:72,total:61,source:"estimated",measured_at:null,measured_by:null},steps:["雙手肘撐地，形成穩定三角架","前臂貼地，掌心朝下","核心繃緊，讓腹部靠近手肘","慢慢讓雙腿離地向後伸展","身體呈水平或斜向懸空"],variants:["Planche Freeze","Tuck Elbow","Elbow to Airchair"],note:"肩膀保持穩定不聳起是關鍵。"},
+  {id:5,category:"freeze",name:"Shoulder Freeze",nameZh:"肩膀定格",difficulty:"intermediate",support_points:["肩膀","頸側"],muscles:["斜方肌","三角肌","頸側肌群","腹斜肌"],power_index:{upper_limb:60,core:68,lower_limb:35,balance:65,total:57,source:"estimated",measured_at:null,measured_by:null},steps:["側躺，以肩膀與頸側為支點","雙手輔助撐地穩定","核心用力讓下半身抬離地板","雙腿可併攏或張開造型","保持頭部不動，眼睛看天花板"],variants:["Shoulder Roll to Freeze","Shoulder to Headspin","Side Freeze"],note:"肩頸承壓需要充分熱身。"},
+  {id:6,category:"freeze",name:"Airchair",nameZh:"空椅定格",difficulty:"advanced",support_points:["單手"],muscles:["肱三頭肌","三角肌","前鋸肌","腹斜肌","髖屈肌"],power_index:{upper_limb:90,core:85,lower_limb:40,balance:88,total:76,source:"estimated",measured_at:null,measured_by:null},steps:["從 Chair Freeze 開始建立基礎","單手撐地，移除手肘支撐","核心極度收緊，臀部上提","下方腿向外伸展，上方腿彎曲","全身重量由單手腕與手指承受"],variants:["Hollowback Airchair","1-Arm Airchair","Airchair to Flare"],note:"需要長期手腕強化訓練。"},
+  {id:7,category:"freeze",name:"Pike Freeze",nameZh:"折刀定格",difficulty:"advanced",support_points:["雙手","頭"],muscles:["三角肌","肱三頭肌","腹直肌","豎脊肌","髖屈肌"],power_index:{upper_limb:85,core:90,lower_limb:50,balance:85,total:78,source:"estimated",measured_at:null,measured_by:null},steps:["完全的手倒立基礎必備","雙手撐地，雙腿伸直合攏","核心極度收緊讓身體筆直","定格時全身呈一直線","進階可用頭頸接觸地板輔助"],variants:["Handstand Freeze","Pike to Spin","V-Freeze"],note:"需要完整的倒立訓練基礎。"},
+  {id:8,category:"freeze",name:"1-Hand Freeze",nameZh:"單手定格",difficulty:"advanced",support_points:["單手"],muscles:["肱三頭肌","三角肌","前鋸肌","腕屈肌","腹橫肌"],power_index:{upper_limb:95,core:88,lower_limb:45,balance:92,total:80,source:"estimated",measured_at:null,measured_by:null},steps:["從雙手倒立開始","慢慢將重心移至慣用手","非慣用手緩緩抬起","全身重量集中在單手與手指","核心與臀肌持續用力維持直線"],variants:["1-Hand Press","Flag Freeze","1-Hand Airchair"],note:"此動作需數年訓練積累。"}
+];
+
+async function init(){
+  try{const res=await fetch('moves_db.json');const j=await res.json();db=j.moves;}
+  catch{db=FALLBACK_DB;}
+  renderToday();
+  renderPending();
+  populateWeaponMoveSelect();
+}
+init();
+
+
+// ── WEAPON ──
+let weapons    = load('breaking_weapons') || [];
+let battlePlan = load('breaking_battle_plan') || []; // array of weapon ids
+let editingWeaponId = null;
+let weaponChain = []; // [{moveId}] while editing
+
+function renderWeaponPage(){
+  renderBattlePlan();
+  renderWeaponGrid();
+}
+
+function renderBattlePlan(){
+  const slots = document.getElementById('battle-plan-slots');
+  if(!battlePlan.length){
+    slots.innerHTML = '<div class="bp-empty">還沒有規劃出場武器 — 從下方武器庫點「加入出場」</div>';
+    return;
+  }
+  slots.innerHTML = battlePlan.map((wid, i) => {
+    const w = weapons.find(x=>x.id===wid);
+    if(!w) return '';
+    const chainStr = w.chain.map(c=>{const m=db.find(x=>x.id===c.moveId);return m?m.name:'?';}).join(' → ');
+    return `<div class="bp-slot">
+      <div class="bp-num">${i+1}</div>
+      <div class="bp-info">
+        <div class="bp-name">${w.name}</div>
+        <div class="bp-chain">${chainStr}</div>
+      </div>
+      ${i>0?`<button class="bp-remove" onclick="moveBattlePlan(${i},-1)" title="上移">↑</button>`:''}
+      ${i<battlePlan.length-1?`<button class="bp-remove" onclick="moveBattlePlan(${i},1)" title="下移">↓</button>`:''}
+      <button class="bp-remove" onclick="removeBattlePlan(${wid})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderWeaponGrid(){
+  const grid = document.getElementById('weapon-grid');
+  const label = document.getElementById('weapon-count-label');
+  if(label) label.textContent = `所有武器（${weapons.length}）`;
+  if(!weapons.length){
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text3);font-size:13px">還沒有武器<br>點右上角「＋ 新增武器」開始建立</div>';
+    return;
+  }
+  grid.innerHTML = weapons.map(w => {
+    const inBattle = battlePlan.includes(w.id);
+    const chainHtml = w.chain.map((c,i) => {
+      const m = db.find(x=>x.id===c.moveId);
+      if(!m) return '';
+      return `${i>0?'<span class="wc-arrow">→</span>':''}<span class="wc-move"><span class="wc-cat-dot" style="background:${CAT_COLOR[m.category]||'#888'}"></span>${m.name}</span>`;
+    }).join('');
+    return `<div class="weapon-card ${inBattle?'in-battle':''}">
+      <div class="weapon-header">
+        <div class="weapon-name">${w.name}</div>
+        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          ${inBattle?'<span class="weapon-tag battle">出場中</span>':''}
+          <span class="weapon-tag">${w.chain.length} 個動作</span>
+        </div>
+      </div>
+      <div class="weapon-chain">${chainHtml}</div>
+      ${w.note?`<div class="weapon-note">"${w.note}"</div>`:''}
+      <div class="weapon-actions">
+        <button class="wa-btn battle-btn" onclick="toggleBattlePlan(${w.id})">${inBattle?'移出出場':'＋ 加入出場'}</button>
+        <button class="wa-btn" onclick="editWeapon(${w.id})">編輯</button>
+        <button class="wa-btn delete-btn" onclick="deleteWeapon(${w.id})">刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleBattlePlan(wid){
+  if(battlePlan.includes(wid)){
+    battlePlan = battlePlan.filter(x=>x!==wid);
+    showToast('已移出出場規劃');
+  } else {
+    battlePlan.push(wid);
+    showToast('已加入出場規劃 ⚔️');
+  }
+  save('breaking_battle_plan', battlePlan);
+  renderWeaponPage();
+}
+
+function removeBattlePlan(wid){
+  battlePlan = battlePlan.filter(x=>x!==wid);
+  save('breaking_battle_plan', battlePlan);
+  renderWeaponPage();
+}
+
+function moveBattlePlan(idx, dir){
+  const newIdx = idx + dir;
+  if(newIdx<0||newIdx>=battlePlan.length) return;
+  [battlePlan[idx], battlePlan[newIdx]] = [battlePlan[newIdx], battlePlan[idx]];
+  save('breaking_battle_plan', battlePlan);
+  renderWeaponPage();
+}
+
+function deleteWeapon(wid){
+  if(!confirm('確定刪除這個武器？')) return;
+  weapons = weapons.filter(x=>x.id!==wid);
+  battlePlan = battlePlan.filter(x=>x!==wid);
+  save('breaking_weapons', weapons);
+  save('breaking_battle_plan', battlePlan);
+  renderWeaponPage();
+  showToast('已刪除');
+}
+
+function editWeapon(wid){
+  const w = weapons.find(x=>x.id===wid);
+  if(!w) return;
+  editingWeaponId = wid;
+  weaponChain = [...w.chain];
+  document.getElementById('we-name').value = w.name;
+  document.getElementById('we-note').value = w.note||'';
+  renderWeaponChainBuilder();
+  document.getElementById('weapon-editor').classList.add('open');
+}
+
+function openWeaponEditor(){
+  editingWeaponId = null;
+  weaponChain = [];
+  document.getElementById('we-name').value = '';
+  document.getElementById('we-note').value = '';
+  renderWeaponChainBuilder();
+  document.getElementById('weapon-editor').classList.add('open');
+}
+
+function closeWeaponEditor(){
+  document.getElementById('weapon-editor').classList.remove('open');
+}
+
+function renderWeaponChainBuilder(){
+  const el = document.getElementById('we-chain-list');
+  if(!weaponChain.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:.5rem 0">尚未加入動作，從下方選擇並點「加入」</div>';
+    return;
+  }
+  el.innerHTML = weaponChain.map((c,i) => {
+    const m = db.find(x=>x.id===c.moveId);
+    return `<div class="we-chain-item">
+      ${i>0?`<span style="font-size:11px;color:var(--text3);flex-shrink:0">→</span>`:''}
+      <div style="width:6px;height:6px;border-radius:50%;background:${m?CAT_COLOR[m.category]:'#888'};flex-shrink:0"></div>
+      <span class="we-chain-name">${m?m.name:'?'} <span style="font-weight:400;color:var(--text3);font-size:11px">${m?m.nameZh||'':''}</span></span>
+      <button class="we-chain-remove" onclick="removeWeaponMove(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addWeaponMove(){
+  const sel = document.getElementById('we-move-select');
+  const moveId = parseInt(sel.value);
+  if(!moveId) return;
+  weaponChain.push({moveId});
+  renderWeaponChainBuilder();
+}
+
+function removeWeaponMove(idx){
+  weaponChain.splice(idx,1);
+  renderWeaponChainBuilder();
+}
+
+
+function saveWeapon(){
+  const name = document.getElementById('we-name').value.trim();
+  if(!name){ showToast('請輸入武器名稱'); return; }
+  if(!weaponChain.length){ showToast('請至少加入一個動作'); return; }
+  const note = document.getElementById('we-note').value.trim();
+  if(editingWeaponId){
+    const w = weapons.find(x=>x.id===editingWeaponId);
+    w.name = name; w.chain = weaponChain; w.note = note;
+    showToast('武器已更新 ✓');
+  } else {
+    weapons.push({id:Date.now(), name, chain:[...weaponChain], note, created:today()});
+    showToast('武器已建立 ⚔️');
+  }
+  save('breaking_weapons', weapons);
+  closeWeaponEditor();
+  renderWeaponPage();
+}
+
+function populateWeaponMoveSelect(){
+  const sel = document.getElementById('we-move-select');
+  if(!sel||!db.length) return;
+  const cats = ['toprock','footwork','powermove','freeze'];
+  sel.innerHTML = '<option value="">— 選擇動作 —</option>' +
+    cats.map(cat => {
+      const moves = db.filter(m=>m.category===cat);
+      if(!moves.length) return '';
+      return `<optgroup label="${CAT_LABEL[cat]}">${moves.map(m=>`<option value="${m.id}">${m.name} ${m.nameZh||''}</option>`).join('')}</optgroup>`;
+    }).join('');
+}
+
+
+// ── BATTLE MODE ──
+let bmWeapons = [];
+
+function openBattleMode(){
+  if(battlePlan.length){
+    bmWeapons = battlePlan.map(wid=>weapons.find(x=>x.id===wid)).filter(Boolean);
+  } else {
+    bmWeapons = [...weapons];
+  }
+  if(!bmWeapons.length){ showToast('武器庫是空的，請先新增武器'); return; }
+  renderBmList();
+  const el = document.getElementById('battle-mode');
+  el.classList.add('open');
+  el.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBattleMode(){
+  document.getElementById('battle-mode').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderBmList(){
+  const total = bmWeapons.length;
+  document.getElementById('bm-list').innerHTML = bmWeapons.map((w,i) => {
+    const chainHtml = w.chain.map((c,ci) => {
+      const m = db.find(x=>x.id===c.moveId);
+      if(!m) return '';
+      return `${ci>0?'<span class="bm-sep">→</span>':''}
+        <span class="bm-move-chip">
+          <span class="bm-move-dot" style="background:${CAT_COLOR[m.category]||'#888'}"></span>
+          ${m.name}
+        </span>`;
+    }).join('');
+    return `<div class="bm-item">
+      <div class="bm-num">${i+1} / ${total}</div>
+      <div class="bm-name">${w.name}</div>
+      <div class="bm-chain-inline">${chainHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ONBOARDING ──
+const OB_STEPS = [
+  {
+    icon:'🕺',
+    title:'歡迎使用 Breaking 動作分類庫',
+    body:`這裡收錄了 Breaking 四大技術類別的動作，並幫你記錄練習進度。<br><br>第一次使用，花 1 分鐘了解怎麼用 👇`
+  },
+  {
+    icon:'🗓',
+    title:'第一步：設定週課表',
+    body:`點上方 <strong>週課表</strong> 頁籤，設定每天要練哪個類別。<br><br>例如：週一 Top Rock、週三 Footwork、週六全部練。<br><br>設定後每次開啟網頁，「今日訓練」就會自動顯示今天的課表。`
+  },
+  {
+    icon:'✅',
+    title:'第二步：練完打勾記錄',
+    body:`在 <strong>今日訓練</strong> 頁面，每個動作右邊有一個圓圈。<br><br>練完就點一下 → 變成綠色打勾 ✓，自動記錄到練習紀錄裡。<br><br>也可以點「＋ 快速記錄動作」手動新增任何動作。`
+  },
+  {
+    icon:'📈',
+    title:'第三步：更新學習狀態',
+    body:`到 <strong>學習進度</strong> 頁面，點任一動作可以切換狀態：<br><br>
+    <span style="background:var(--surface2);padding:2px 8px;border-radius:20px;font-size:12px">未開始</span> →
+    <span style="background:var(--amber-bg);color:var(--amber);padding:2px 8px;border-radius:20px;font-size:12px;border:0.5px solid var(--amber-bd)">學習中</span> →
+    <span style="background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:20px;font-size:12px;border:0.5px solid var(--blue-bd)">練習中</span> →
+    <span style="background:var(--teal-bg);color:var(--teal);padding:2px 8px;border-radius:20px;font-size:12px;border:0.5px solid var(--teal-bd)">已掌握</span><br><br>
+    系統會根據你的狀態，推薦下次該重點練哪些動作。`
+  },
+  {
+    icon:'🎯',
+    title:'系統自動幫你推薦',
+    body:`每次開啟網頁，「今日訓練」頂部會出現<strong>建議重點練習</strong>的動作。<br><br>推薦邏輯：<br>• 學習中 且 2 天以上沒練 → 優先推薦<br>• 練習中 且 3 天以上沒練 → 推薦複習<br>• 未開始的入門動作 → 建議嘗試<br><br>資料存在瀏覽器，不需要帳號。`
+  }
+];
+
+let obStep = 0;
+
+function renderOb(){
+  const s = OB_STEPS[obStep];
+  const total = OB_STEPS.length;
+  document.getElementById('ob-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:1.1rem">
+      <div style="font-size:36px;margin-bottom:8px">${s.icon}</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">${s.title}</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.75">${s.body}</div>
+    </div>`;
+  document.getElementById('ob-dots').innerHTML = OB_STEPS.map((_,i)=>
+    `<div style="width:6px;height:6px;border-radius:50%;background:${i===obStep?'var(--accent)':'var(--border2)'};transition:background .2s"></div>`
+  ).join('');
+  document.getElementById('ob-prev').style.visibility = obStep===0 ? 'hidden' : 'visible';
+  document.getElementById('ob-next').textContent = obStep===total-1 ? '開始使用 →' : '下一步 →';
+}
+
+function obNext(){
+  if(obStep < OB_STEPS.length-1){ obStep++; renderOb(); }
+  else { closeOb(); }
+}
+function obPrev(){ if(obStep>0){ obStep--; renderOb(); } }
+function closeOb(){
+  document.getElementById('ob-modal').classList.remove('open');
+  localStorage.setItem('breaking_ob_done','1');
+}
+
+function maybeShowOb(){
+  if(!localStorage.getItem('breaking_ob_done')){
+    obStep=0;
+    renderOb();
+    document.getElementById('ob-modal').classList.add('open');
+  }
+}
+
+maybeShowOb();
+</script>
+
+
+<!-- Weapon editor modal -->
+<div class="modal-bg" id="weapon-editor" onclick="if(event.target===this)closeWeaponEditor()" style="z-index:250">
+  <div class="modal" style="max-width:520px">
+    <h2 id="we-title">新增武器</h2>
+    <p class="modal-sub">串接動作組成你的比賽連技</p>
+
+    <div class="form-field">
+      <label>武器名稱 *</label>
+      <input type="text" id="we-name" placeholder="e.g. 開場炸彈、壓軸必殺技…">
+    </div>
+
+    <div class="form-field">
+      <label>動作連技</label>
+      <div class="we-chain-builder">
+        <div id="we-chain-list"></div>
+      </div>
+      <div class="arrow-hint">👆 已加入的動作會依序串接，可點 ✕ 移除</div>
+      <div class="we-add-move">
+        <select id="we-move-select"></select>
+        <button class="we-add-btn" onclick="addWeaponMove()">＋ 加入</button>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>備注 / 使用時機（選填）</label>
+      <input type="text" id="we-note" placeholder="e.g. 第一局開場用、對手強時壓軸">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeWeaponEditor()">取消</button>
+      <button class="btn-submit" onclick="saveWeapon()">儲存武器 ⚔️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onboarding modal -->
+<div class="modal-bg" id="ob-modal" style="z-index:300">
+  <div class="modal" style="max-width:460px">
+    <div id="ob-content"></div>
+    <div style="display:flex;gap:8px;margin-top:1.2rem;align-items:center">
+      <div id="ob-dots" style="display:flex;gap:5px;flex:1"></div>
+      <button class="btn-cancel" id="ob-prev" onclick="obPrev()" style="flex:none;padding:9px 16px">← 上一步</button>
+      <button class="btn-submit" id="ob-next" onclick="obNext()" style="flex:none;padding:9px 20px">開始 →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Battle Mode -->
+<div class="battle-mode-bg" id="battle-mode">
+  <div class="bm-header">
+    <span class="bm-title">⚔️ 比賽武器</span>
+    <button class="bm-close" onclick="closeBattleMode()">✕ 結束</button>
+  </div>
+  <div class="bm-list" id="bm-list"></div>
+</div>
+
+</body>
+</html>
+<!-- 覆蓋原有 html 結尾 - 這段不會執行，只是備用 -->
