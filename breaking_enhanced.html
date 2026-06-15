@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breaking 動作分類庫</title>
+<style>
+  :root {
+    --bg: #f5f4f1; --surface: #ffffff; --surface2: #eeece8;
+    --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.16);
+    --text: #1a1a18; --text2: #58574f; --text3: #9a9890;
+    --accent: #1D9E75; --accent-dark: #0F6E56;
+    --teal:   #0F6E56; --teal-bg:   #E1F5EE; --teal-bd:   #5DCAA5;
+    --amber:  #633806; --amber-bg:  #FAEEDA; --amber-bd:  #EF9F27;
+    --coral:  #712B13; --coral-bg:  #FAECE7; --coral-bd:  #F0997B;
+    --purple: #3C3489; --purple-bg: #EEEDFE; --purple-bd: #AFA9EC;
+    --blue:   #0C447C; --blue-bg:   #E6F1FB; --blue-bd:   #85B7EB;
+    --pink:   #72243E; --pink-bg:   #FBEAF0; --pink-bd:   #ED93B1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614; --surface: #202020; --surface2: #2a2a28;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.18);
+      --text: #e6e4de; --text2: #a6a49c; --text3: #66645c;
+      --accent: #5DCAA5; --accent-dark: #9FE1CB;
+      --teal:   #9FE1CB; --teal-bg:   #04342C; --teal-bd:   #0F6E56;
+      --amber:  #FAC775; --amber-bg:  #412402; --amber-bd:  #854F0B;
+      --coral:  #F0997B; --coral-bg:  #4A1B0C; --coral-bd:  #993C1D;
+      --purple: #CECBF6; --purple-bg: #26215C; --purple-bd: #534AB7;
+      --blue:   #B5D4F4; --blue-bg:   #042C53; --blue-bd:   #185FA5;
+      --pink:   #F4C0D1; --pink-bg:   #4B1528; --pink-bd:   #993556;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+  .header { padding: 2rem 2rem 1.25rem; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+  .header-top { display: flex; align-items: baseline; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
+  .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-sub { font-size: 13px; color: var(--text3); line-height: 1.5; }
+  .version-tag { font-size: 10px; padding: 3px 9px; border-radius: 20px; border: 0.5px solid var(--border2); color: var(--text3); background: var(--surface2); }
+  .header-meta { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .header-meta-item { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 5px; }
+  .header-meta-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+
+  /* Nav tabs */
+  .main-nav { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); background: var(--surface); padding: 0 2rem; }
+  .main-nav-btn { font-size: 13px; padding: 10px 16px; border: none; background: transparent; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+  .main-nav-btn:hover { color: var(--text2); }
+  .main-nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Category tabs */
+  .cat-tabs { padding: .9rem 2rem .7rem; display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 0.5px solid var(--border); background: var(--surface); overflow-x: auto; }
+  .cat-tab { font-size: 13px; padding: 6px 16px; border-radius: 8px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all .15s; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .cat-tab:hover { background: var(--surface2); }
+  .cat-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .cat-tab .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* Toolbar */
+  .toolbar { padding: .75rem 2rem; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .diff-btn { font-size: 11px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all .15s; }
+  .diff-btn:hover { background: var(--surface2); }
+  .diff-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text3); pointer-events: none; }
+  .search-wrap input { font-size: 13px; padding: 7px 12px 7px 30px; border-radius: 8px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); width: 190px; outline: none; transition: border-color .15s; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .add-btn { font-size: 12px; padding: 6px 14px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-weight: 600; transition: opacity .15s; white-space: nowrap; }
+  .add-btn:hover { opacity: .88; }
+
+  .stats-bar { padding: .5rem 2rem; display: flex; gap: 20px; font-size: 12px; color: var(--text3); border-bottom: 0.5px solid var(--border); background: var(--bg); flex-wrap: wrap; }
+  .stats-bar b { color: var(--text2); font-weight: 600; }
+
+  /* Section heading */
+  .section-heading { padding: 1.2rem 2rem .4rem; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); display: flex; align-items: center; gap: 8px; }
+  .section-heading .sh-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .grid-wrap { padding: .5rem 2rem 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); gap: 12px; }
+
+  /* Card */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.1rem; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s; position: relative; }
+  .card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+  .card.compare-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .card-cat-stripe { height: 3px; border-radius: 2px; margin-bottom: 10px; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+  .card-name-en { font-size: 15px; font-weight: 700; color: var(--text); }
+  .card-name-zh { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+  .badge { font-size: 10px; padding: 2px 9px; border-radius: 20px; white-space: nowrap; font-weight: 600; }
+  .badge-beginner    { background: var(--teal-bg);   color: var(--teal);   border: 0.5px solid var(--teal-bd); }
+  .badge-intermediate{ background: var(--amber-bg);  color: var(--amber);  border: 0.5px solid var(--amber-bd); }
+  .badge-advanced    { background: var(--coral-bg);  color: var(--coral);  border: 0.5px solid var(--coral-bd); }
+  .support-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 9px; }
+  .stag { font-size: 11px; padding: 2px 7px; border-radius: 5px; background: var(--surface2); color: var(--text2); }
+  .pwr-row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .pwr-label { font-size: 11px; color: var(--text3); width: 28px; }
+  .pwr-bar-bg { flex: 1; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
+  .pwr-bar-fill { height: 100%; border-radius: 2px; }
+  .pwr-val { font-size: 11px; color: var(--text2); font-weight: 600; min-width: 22px; text-align: right; }
+  .card-footer { display: flex; align-items: center; gap: 5px; margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); }
+  .source-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .source-estimated { background: var(--amber-bd); }
+  .source-measured  { background: var(--teal-bd); }
+  .card-source-txt { font-size: 10px; color: var(--text3); flex: 1; }
+
+  /* Progress badge on card */
+  .card-progress-badge { position: absolute; top: 10px; right: 10px; font-size: 14px; }
+  .card-compare-check { position: absolute; bottom: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; transition: all .15s; }
+  .card-compare-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .empty { padding: 3rem; text-align: center; color: var(--text3); grid-column: 1/-1; font-size: 14px; }
+
+  /* Detail overlay */
+  .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; overflow-y: auto; padding: 2rem 1rem; }
+  .detail-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .detail-panel { background: var(--surface); border-radius: 16px; border: 0.5px solid var(--border); width: 100%; max-width: 600px; padding: 1.75rem; margin: auto; }
+  .detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.4rem; }
+  .detail-titles { display: flex; flex-direction: column; gap: 3px; }
+  .detail-name-en { font-size: 22px; font-weight: 700; }
+  .detail-name-zh { font-size: 14px; color: var(--text3); }
+  .close-btn { background: var(--surface2); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sec { margin-bottom: 1.2rem; }
+  .sec-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 7px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 12px; padding: 3px 10px; border-radius: 6px; background: var(--surface2); color: var(--text2); }
+  .muscle-tag { background: var(--purple-bg); color: var(--purple); border: 0.5px solid var(--purple-bd); }
+  .variant-tag { background: var(--blue-bg); color: var(--blue); border: 0.5px solid var(--blue-bd); }
+  .prereq-tag { background: var(--pink-bg); color: var(--pink); border: 0.5px solid var(--pink-bd); cursor: pointer; }
+  .prereq-tag:hover { opacity: .8; }
+  .pwr-detail-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .pwr-detail-label { font-size: 12px; color: var(--text2); width: 56px; }
+  .pwr-detail-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+  .pwr-detail-fill { height: 100%; border-radius: 3px; }
+  .pwr-detail-val { font-size: 12px; font-weight: 700; min-width: 28px; text-align: right; }
+  .pwr-total-row { display: flex; justify-content: space-between; padding-top: 9px; border-top: 0.5px solid var(--border); margin-top: 5px; font-size: 13px; }
+  .pwr-total-row span:last-child { font-weight: 700; }
+  .step-list { display: flex; flex-direction: column; gap: 8px; }
+  .step-item { display: flex; gap: 10px; align-items: flex-start; }
+  .step-num { min-width: 22px; height: 22px; border-radius: 50%; background: var(--teal-bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+  .step-txt { font-size: 13px; color: var(--text2); line-height: 1.65; padding-top: 2px; }
+  .note-box { background: var(--surface2); border-radius: 8px; padding: 11px 13px; font-size: 12px; color: var(--text2); line-height: 1.65; border-left: 2px solid var(--accent); }
+  .source-info { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); margin-top: 8px; }
+  .edit-btn { margin-top: 1rem; width: 100%; padding: 10px; border-radius: 8px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; font-size: 13px; }
+  .edit-btn:hover { background: var(--surface2); }
+  .edit-section { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 0.5px solid var(--border); }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .edit-field { display: flex; flex-direction: column; gap: 4px; }
+  .edit-field label { font-size: 11px; color: var(--text3); font-weight: 500; }
+  .edit-field input, .edit-field select { font-size: 13px; padding: 7px 9px; border-radius: 7px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); outline: none; }
+  .edit-field input:focus { border-color: var(--accent); }
+  .save-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .save-btn:hover { opacity: .88; }
+  .saved-msg { text-align: center; font-size: 12px; color: var(--teal); margin-top: 6px; display: none; }
+
+  /* Progress controls in detail */
+  .progress-sec { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  .progress-btn { font-size: 12px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+  .progress-btn:hover { background: var(--surface2); }
+  .progress-btn.active-want  { background: var(--blue-bg);   color: var(--blue);   border-color: var(--blue-bd); }
+  .progress-btn.active-learning { background: var(--amber-bg);  color: var(--amber);  border-color: var(--amber-bd); }
+  .progress-btn.active-mastered { background: var(--teal-bg);   color: var(--teal);   border-color: var(--teal-bd); }
+
+  /* Video embed */
+  .video-embed { border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 1.2rem; }
+  .video-embed iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; }
+  .video-link { font-size: 12px; color: var(--accent); display: flex; align-items: center; gap: 4px; text-decoration: none; margin-bottom: 1.2rem; }
+  .video-link:hover { text-decoration: underline; }
+
+  /* Rating */
+  .rating-sec { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.2rem; }
+  .stars-row { display: flex; align-items: center; gap: 6px; }
+  .star-btn { font-size: 20px; cursor: pointer; background: none; border: none; color: var(--border2); transition: color .1s; padding: 0; line-height: 1; }
+  .star-btn.filled { color: var(--amber-bd); }
+  .star-btn:hover { color: var(--amber-bd); }
+  .star-count { font-size: 12px; color: var(--text3); }
+  .comment-area { font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); outline: none; resize: vertical; min-height: 60px; width: 100%; font-family: inherit; line-height: 1.5; }
+  .comment-area:focus { border-color: var(--accent); }
+  .comment-submit-btn { font-size: 12px; padding: 6px 14px; border-radius: 7px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-weight: 600; align-self: flex-end; }
+  .comment-submit-btn:hover { opacity: .88; }
+  .comments-list { display: flex; flex-direction: column; gap: 8px; }
+  .comment-item { background: var(--surface2); border-radius: 8px; padding: 9px 12px; }
+  .comment-item-stars { color: var(--amber-bd); font-size: 12px; }
+  .comment-item-text { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+  .comment-item-date { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* Submit modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; overflow-y: auto; padding: 2rem 1rem; }
+  .modal-bg.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal { background: var(--surface); border-radius: 16px; border: 0.5px solid var(--border); width: 100%; max-width: 500px; padding: 1.75rem; margin: auto; }
+  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--text3); margin-bottom: 1.4rem; }
+  .review-notice { background: var(--amber-bg); border: 0.5px solid var(--amber-bd); border-radius: 8px; padding: 10px 13px; font-size: 12px; color: var(--amber); margin-bottom: 1.2rem; line-height: 1.6; }
+  .form-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .form-field label { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .form-field input, .form-field select, .form-field textarea { font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); outline: none; font-family: inherit; }
+  .form-field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.2rem; }
+  .btn-cancel { flex: 1; padding: 10px; border-radius: 8px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-size: 13px; }
+  .btn-submit { flex: 2; padding: 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-submit:hover { opacity: .88; }
+
+  /* Pending */
+  .pending-panel { background: var(--amber-bg); border: 0.5px solid var(--amber-bd); border-radius: 12px; padding: 1.2rem; margin: 1rem 2rem 0; }
+  .pending-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .pending-title { font-size: 13px; font-weight: 700; color: var(--amber); }
+  .pending-count { font-size: 11px; background: var(--amber-bd); color: #fff; border-radius: 20px; padding: 2px 8px; font-weight: 700; }
+  .pending-list { display: flex; flex-direction: column; gap: 7px; }
+  .pending-item { background: var(--surface); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border: 0.5px solid var(--border); }
+  .pending-item-name { font-size: 13px; font-weight: 600; }
+  .pending-item-sub { font-size: 11px; color: var(--text3); }
+  .pending-approve-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 0.5px solid var(--teal-bd); background: var(--teal-bg); color: var(--teal); cursor: pointer; font-weight: 600; margin-left: 6px; }
+  .pending-reject-btn  { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 0.5px solid var(--coral-bd); background: var(--coral-bg); color: var(--coral); cursor: pointer; font-weight: 600; }
+
+  /* ── Compare panel ── */
+  .compare-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border2); padding: 10px 2rem; display: flex; align-items: center; gap: 12px; z-index: 50; transform: translateY(100%); transition: transform .25s ease; }
+  .compare-bar.visible { transform: translateY(0); }
+  .compare-bar-info { font-size: 13px; color: var(--text2); flex: 1; }
+  .compare-bar-info b { color: var(--text); }
+  .compare-go-btn { font-size: 13px; padding: 8px 18px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-weight: 600; }
+  .compare-clear-btn { font-size: 13px; padding: 8px 14px; border-radius: 8px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; }
+
+  /* Compare modal */
+  .compare-modal { background: var(--surface); border-radius: 16px; border: 0.5px solid var(--border); width: 100%; max-width: 900px; padding: 1.75rem; margin: auto; }
+  .compare-modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 1.4rem; }
+  .compare-table { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .compare-row { display: grid; background: var(--surface); }
+  .compare-row.header-row { background: var(--surface2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); }
+  .compare-cell { padding: 10px 14px; font-size: 13px; border-right: 1px solid var(--border); }
+  .compare-cell:last-child { border-right: none; }
+  .compare-cell.label { color: var(--text3); font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .compare-bar-mini { height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; margin-top: 4px; }
+  .compare-bar-mini-fill { height: 100%; border-radius: 3px; }
+  .compare-best { color: var(--teal); font-weight: 700; }
+
+  /* ── Progress / My Moves view ── */
+  .progress-view { padding: 1.5rem 2rem; }
+  .progress-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .prog-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; text-align: center; }
+  .prog-card-count { font-size: 28px; font-weight: 700; }
+  .prog-card-label { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .prog-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .prog-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+  .prog-item { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color .15s; }
+  .prog-item:hover { border-color: var(--border2); }
+  .prog-item-name { font-size: 14px; font-weight: 600; }
+  .prog-item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .prog-item-right { display: flex; align-items: center; gap: 8px; }
+  .prog-remove { font-size: 11px; color: var(--text3); cursor: pointer; padding: 2px 7px; border-radius: 5px; border: 0.5px solid var(--border2); background: transparent; }
+  .prog-remove:hover { color: var(--coral); border-color: var(--coral-bd); }
+
+  /* ── Skill Tree ── */
+  .skill-tree-view { padding: 1.5rem 2rem; }
+  .skill-tree-info { font-size: 13px; color: var(--text3); margin-bottom: 1.2rem; }
+  .tree-canvas-wrap { overflow-x: auto; }
+  .tree-svg { display: block; min-width: 600px; }
+  .tree-node { cursor: pointer; }
+  .tree-node rect { transition: all .15s; }
+  .tree-node:hover rect { filter: brightness(0.95); }
+  .tree-edge { stroke-dasharray: 4 3; }
+
+  /* ── Training plan view ── */
+  .plan-view { padding: 1.5rem 2rem; }
+  .plan-form { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.4rem; margin-bottom: 1.4rem; }
+  .plan-form h3 { font-size: 15px; font-weight: 700; margin-bottom: 1rem; }
+  .plan-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .plan-field { display: flex; flex-direction: column; gap: 4px; }
+  .plan-field label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .plan-field select { font-size: 13px; padding: 7px 9px; border-radius: 7px; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); outline: none; }
+  .plan-field select:focus { border-color: var(--accent); }
+  .gen-plan-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 4px; }
+  .plan-output { display: flex; flex-direction: column; gap: 12px; }
+  .plan-day { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .plan-day-header { padding: 10px 14px; background: var(--surface2); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .plan-day-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .plan-day-moves { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .plan-move-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .plan-move-row .badge { flex-shrink: 0; }
+  .plan-move-name { font-weight: 600; }
+  .plan-move-cat { font-size: 11px; color: var(--text3); }
+  .plan-tip { font-size: 12px; color: var(--text3); padding: 8px 14px; border-top: 0.5px solid var(--border); font-style: italic; }
+
+  .toast { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transition: all .3s ease; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .footer { border-top: 0.5px solid var(--border); padding: 1.5rem 2rem 4rem; font-size: 12px; color: var(--text3); display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); }
+
+  @media (max-width: 600px) {
+    .header, .toolbar, .grid-wrap, .stats-bar, .footer, .progress-view, .plan-view, .skill-tree-view { padding-left: 1rem; padding-right: 1rem; }
+    .cat-tabs, .main-nav { padding-left: 1rem; padding-right: 1rem; }
+    .section-heading { padding-left: 1rem; }
+    .pending-panel { margin-left: 1rem; margin-right: 1rem; }
+    .grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .plan-form-row { grid-template-columns: 1fr; }
+    .search-wrap input { width: 140px; }
+    .progress-summary { grid-template-columns: 1fr 1fr 1fr; }
+    .compare-modal { padding: 1rem; }
+    .main-nav { overflow-x: auto; }
+    .main-nav-btn { white-space: nowrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>Breaking 動作分類庫</h1>
+    <span class="version-tag">v3.0</span>
+  </div>
+  <div class="header-sub">Top Rock · Footwork · Power Move · Freeze — BBoy / BGirl 完整動作資料庫</div>
+  <div class="header-meta">
+    <span class="header-meta-item"><span class="header-meta-dot"></span>支撐點 · 肌群 · 功率指標分析</span>
+    <span class="header-meta-item"><span class="header-meta-dot" style="background:var(--amber-bd)"></span>進度追蹤 · 比較 · 評分 · 訓練計劃</span>
+  </div>
+</div>
+
+<!-- Main nav -->
+<div class="main-nav">
+  <button class="main-nav-btn active" onclick="switchView('library', this)">📚 動作庫</button>
+  <button class="main-nav-btn" onclick="switchView('progress', this)">🎯 我的進度</button>
+  <button class="main-nav-btn" onclick="switchView('plan', this)">📅 訓練計劃</button>
+  <button class="main-nav-btn" onclick="switchView('tree', this)">🌳 技能樹</button>
+</div>
+
+<!-- Library view -->
+<div id="view-library">
+  <div class="cat-tabs">
+    <button class="cat-tab active" onclick="setCat('all',this)"><span class="dot" style="background:#888"></span>全部</button>
+    <button class="cat-tab" onclick="setCat('toprock',this)"><span class="dot" style="background:#EF9F27"></span>Top Rock 站立</button>
+    <button class="cat-tab" onclick="setCat('footwork',this)"><span class="dot" style="background:#7F77DD"></span>Footwork 地板步</button>
+    <button class="cat-tab" onclick="setCat('powermove',this)"><span class="dot" style="background:#D85A30"></span>Power Move 力量技</button>
+    <button class="cat-tab" onclick="setCat('freeze',this)"><span class="dot" style="background:#1D9E75"></span>Freeze 定格</button>
+  </div>
+  <div class="toolbar">
+    <button class="diff-btn active" onclick="setDiff('all',this)">全部難度</button>
+    <button class="diff-btn" onclick="setDiff('beginner',this)">入門</button>
+    <button class="diff-btn" onclick="setDiff('intermediate',this)">中階</button>
+    <button class="diff-btn" onclick="setDiff('advanced',this)">進階</button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="sq" placeholder="搜尋動作、肌群…" oninput="renderGrid()">
+    </div>
+    <button class="add-btn" onclick="openSubmit()">＋ 投稿動作</button>
+  </div>
+  <div class="stats-bar" id="stats-bar"></div>
+  <div id="pending-wrap"></div>
+  <div id="main-content"></div>
+</div>
+
+<!-- Progress view -->
+<div id="view-progress" style="display:none">
+  <div class="progress-view" id="progress-view-content"></div>
+</div>
+
+<!-- Plan view -->
+<div id="view-plan" style="display:none">
+  <div class="plan-view">
+    <div class="plan-form">
+      <h3>🗓 訓練計劃產生器</h3>
+      <div class="plan-form-row">
+        <div class="plan-field">
+          <label>目標類別</label>
+          <select id="plan-cat">
+            <option value="all">全部類別</option>
+            <option value="toprock">Top Rock 站立</option>
+            <option value="footwork">Footwork 地板步</option>
+            <option value="powermove">Power Move 力量技</option>
+            <option value="freeze">Freeze 定格</option>
+          </select>
+        </div>
+        <div class="plan-field">
+          <label>難度範圍</label>
+          <select id="plan-diff">
+            <option value="beginner">入門為主</option>
+            <option value="mixed">入門 + 中階</option>
+            <option value="intermediate">中階為主</option>
+            <option value="advanced">中階 + 進階</option>
+          </select>
+        </div>
+        <div class="plan-field">
+          <label>計劃天數</label>
+          <select id="plan-days">
+            <option value="7">7 天</option>
+            <option value="14">14 天</option>
+            <option value="30">30 天</option>
+          </select>
+        </div>
+      </div>
+      <button class="gen-plan-btn" onclick="generatePlan()">產生訓練計劃 →</button>
+    </div>
+    <div class="plan-output" id="plan-output"></div>
+  </div>
+</div>
+
+<!-- Skill tree view -->
+<div id="view-tree" style="display:none">
+  <div class="skill-tree-view">
+    <p class="skill-tree-info">箭頭代表「前置技能」關係，點擊節點可查看動作詳情。顏色反映你的練習進度。</p>
+    <div class="tree-canvas-wrap">
+      <svg id="skill-tree-svg" class="tree-svg"></svg>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Breaking 動作分類庫 v3.0</span>
+  <span class="footer-dot"></span>
+  <span>僅供訓練參考，練習前請充分熱身</span>
+  <span class="footer-dot"></span>
+  <span>資料持續更新中</span>
+</div>
+
+<!-- Detail overlay -->
+<div class="detail-overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="detail-panel" id="detail-panel"></div>
+</div>
+
+<!-- Compare modal reusing modal-bg -->
+<div class="modal-bg" id="compare-modal" onclick="if(event.target===this)closeCompare()">
+  <div class="compare-modal" id="compare-inner"></div>
+</div>
+
+<!-- Submit modal -->
+<div class="modal-bg" id="submit-modal" onclick="handleModalClick(event)">
+  <div class="modal" id="modal-inner">
+    <h2>投稿新動作</h2>
+    <p class="modal-sub">填寫動作資料，送出後將由管理員審核後上架</p>
+    <div class="review-notice">⏳ 審核說明：投稿內容將在 <strong>24–72 小時</strong>內完成審核，通過後才會正式收錄。</div>
+    <div class="form-row">
+      <div class="form-field"><label>動作英文名稱 *</label><input type="text" id="f-name-en" placeholder="e.g. 6-Step"></div>
+      <div class="form-field"><label>動作中文名稱 *</label><input type="text" id="f-name-zh" placeholder="e.g. 六步"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>動作類別 *</label>
+        <select id="f-cat">
+          <option value="toprock">Top Rock 站立</option>
+          <option value="footwork">Footwork 地板步</option>
+          <option value="powermove">Power Move 力量技</option>
+          <option value="freeze">Freeze 定格</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>難度分級 *</label>
+        <select id="f-diff">
+          <option value="beginner">入門</option>
+          <option value="intermediate">中階</option>
+          <option value="advanced">進階</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><label>主要支撐點 / 重心說明</label><input type="text" id="f-support" placeholder="e.g. 雙腳, 核心重心"></div>
+    <div class="form-field"><label>動作說明 / 教學要點 *</label><textarea id="f-desc" placeholder="簡述動作要領、常見錯誤等…"></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><label>主要肌群</label><input type="text" id="f-muscles" placeholder="e.g. 股四頭肌, 核心"></div>
+      <div class="form-field"><label>參考影片連結</label><input type="text" id="f-video" placeholder="https://..."></div>
+    </div>
+    <div class="form-field"><label>你的名稱／暱稱</label><input type="text" id="f-author" placeholder="e.g. BBoy Alex"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSubmit()">取消</button>
+      <button class="btn-submit" onclick="submitMove()">送出審核 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Compare floating bar -->
+<div class="compare-bar" id="compare-bar">
+  <div class="compare-bar-info">已選 <b id="compare-count">0</b> 個動作進行比較（最多 3 個）</div>
+  <button class="compare-clear-btn" onclick="clearCompare()">清除</button>
+  <button class="compare-go-btn" onclick="openCompare()">開始比較 →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ──
+const diffLabel = { beginner:'入門', intermediate:'中階', advanced:'進階' };
+const catLabel  = { toprock:'Top Rock 站立', footwork:'Footwork 地板步', powermove:'Power Move 力量技', freeze:'Freeze 定格' };
+const catColor  = { toprock:'#EF9F27', footwork:'#7F77DD', powermove:'#D85A30', freeze:'#1D9E75' };
+const pwrColors = { upper_limb:'#378ADD', core:'#7F77DD', lower_limb:'#1D9E75', balance:'#D85A30' };
+const pwrNames  = { upper_limb:'上肢', core:'核心', lower_limb:'下肢', balance:'平衡' };
+const PROGRESS_LABELS = { want:'想學', learning:'練習中', mastered:'已掌握' };
+const PROGRESS_EMOJI  = { want:'📌', learning:'🔥', mastered:'✅' };
+const ADMIN_PW = 'breaking2025';
+
+// ── State ──
+let db = [];
+let pendingDB = JSON.parse(localStorage.getItem('breaking_pending') || '[]');
+let progressDB = JSON.parse(localStorage.getItem('breaking_progress') || '{}'); // {id: 'want'|'learning'|'mastered'}
+let ratingsDB  = JSON.parse(localStorage.getItem('breaking_ratings')  || '{}'); // {id: {stars, comments:[]}}
+let activeCat  = 'all';
+let activeDiff = 'all';
+let showEdit = false;
+let compareSet = []; // up to 3 move ids
+let currentView = 'library';
+
+// ── Prerequisite tree data ──
+const PREREQS = {
+  2:   [1],        // Chair ← Baby
+  3:   [1],        // Headstand ← Baby
+  4:   [1],        // Elbow ← Baby
+  5:   [3],        // Shoulder ← Headstand
+  6:   [2],        // Airchair ← Chair
+  7:   [3],        // Pike ← Headstand
+  8:   [6,7],      // 1-Hand ← Airchair + Pike
+  202: [201],      // CC ← 6-Step
+  204: [201],      // Helicopter ← 6-Step
+  205: [201],      // Zulu ← 6-Step
+  301: [201,304],  // Windmill ← 6-Step + Backspin
+  302: [3,301],    // Headspin ← Headstand + Windmill
+  303: [6],        // Flare ← Airchair
+  305: [303],      // Airflare ← Flare
+  103: [101,102],  // Brooklyn ← Indian + Salsa
+};
+
+// ── Data ──
+const FALLBACK_DB = [
+  { id:101, category:"toprock", name:"Indian Step", nameZh:"印地安步", difficulty:"beginner", support_points:["雙腳交替"], muscles:["股四頭肌","臀大肌","腓腸肌"], power_index:{ upper_limb:20, core:30, lower_limb:60, balance:50, total:40, source:"estimated" }, steps:["雙腳與肩同寬站立","右腳向前踏，同時左臂前擺","左腳跟上，重複交替","加入上半身扭轉增加節奏感","配合音樂 Downbeat 做重音"], variants:["Brooklyn Rock","Latin Rock"], note:"Breaking 最基礎的 Top Rock，重點在上下半身的協調與律動感。" },
+  { id:102, category:"toprock", name:"Salsa Rock", nameZh:"莎莎步", difficulty:"beginner", support_points:["雙腳"], muscles:["髖屈肌","臀中肌","腓腸肌","腹斜肌"], power_index:{ upper_limb:25, core:40, lower_limb:55, balance:45, total:41, source:"estimated" }, steps:["右腳向右踏出一步","左腳收至右腳旁","重心左移，左腳踏出","配合手臂自然擺動","保持膝蓋微彎，重心低"], variants:["Latin Rock","Mambo Rock"], note:"源自 Latin 舞蹈，律動感強烈。" },
+  { id:103, category:"toprock", name:"Brooklyn Rock", nameZh:"布魯克林步", difficulty:"intermediate", support_points:["雙腳"], muscles:["股四頭肌","臀大肌","腹斜肌","三角肌"], power_index:{ upper_limb:35, core:45, lower_limb:60, balance:50, total:48, source:"estimated" }, steps:["雙腳站立，膝蓋微彎","右腳向右前方踏出交叉","身體隨之轉向右側","左腳迅速補位恢復平衡","雙手輔助做身體扭轉造型"], variants:["Side Rock","Cross Step Rock"], note:"強調上半身的傾斜與扭轉。" },
+  { id:104, category:"toprock", name:"Kick Step", nameZh:"踢腳步", difficulty:"beginner", support_points:["單腳站立"], muscles:["髖屈肌","股四頭肌","臀大肌"], power_index:{ upper_limb:15, core:35, lower_limb:65, balance:55, total:43, source:"estimated" }, steps:["重心放在左腳","右腳向前踢出","右腳落地時順勢踏步","交替左右腳練習"], variants:["Side Kick","Back Kick Step"], note:"訓練單腳平衡與髖部靈活度。" },
+  { id:201, category:"footwork", name:"6-Step", nameZh:"六步", difficulty:"beginner", support_points:["雙手","雙腳交替"], muscles:["肱三頭肌","三角肌","股四頭肌","腓腸肌","核心"], power_index:{ upper_limb:40, core:50, lower_limb:55, balance:45, total:48, source:"estimated" }, steps:["從撐地姿勢開始","右腳向右跨出","左腳跟上移至右腳後方","右腳向右後移","左腳向前跨","完成循環"], variants:["4-Step","3-Step","CC"], note:"Footwork 的基礎骨架，所有地板步皆由此衍生。" },
+  { id:202, category:"footwork", name:"CC (Crazy Legs)", nameZh:"瘋腿", difficulty:"intermediate", support_points:["雙手","雙腳"], muscles:["股四頭肌","臀大肌","腹橫肌","腓腸肌"], power_index:{ upper_limb:45, core:60, lower_limb:70, balance:55, total:58, source:"estimated" }, steps:["從 6-Step 姿勢出發","雙腿快速交叉擺動","腿部類似剪刀開合","保持手臂穩定撐地"], variants:["6-Step CC combo","Reverse CC"], note:"CC 是 Footwork 的核心技巧，關鍵在速度與協調。" },
+  { id:203, category:"footwork", name:"3-Step", nameZh:"三步", difficulty:"beginner", support_points:["雙手","雙腳"], muscles:["核心","臀大肌","股四頭肌"], power_index:{ upper_limb:35, core:45, lower_limb:50, balance:40, total:43, source:"estimated" }, steps:["撐地姿勢起始","一腳向外側踏出","另一腳跟上交叉","第三步回到起始位置"], variants:["2-Step","4-Step"], note:"比六步更精簡，節奏更快。" },
+  { id:204, category:"footwork", name:"Helicopter", nameZh:"直升機步", difficulty:"intermediate", support_points:["單手","雙腳"], muscles:["肱三頭肌","前鋸肌","股四頭肌","腹斜肌"], power_index:{ upper_limb:60, core:65, lower_limb:60, balance:65, total:63, source:"estimated" }, steps:["單手撐地","左腳從右手前方掃過","右腳從右手後方掃過","形成腿部繞手旋轉"], variants:["Two Hand Heli","Heli to Freeze"], note:"視覺效果強烈的 Footwork。" },
+  { id:205, category:"footwork", name:"Zulu Spin", nameZh:"祖魯旋轉", difficulty:"intermediate", support_points:["臀部","雙手"], muscles:["腹斜肌","臀大肌","肱三頭肌"], power_index:{ upper_limb:50, core:65, lower_limb:45, balance:60, total:55, source:"estimated" }, steps:["坐在地板上，雙手撐地","抬起臀部推進旋轉","利用慣性順/逆時針轉"], variants:["Butt Spin","Crab Walk"], note:"趣味性強的地板動作。" },
+  { id:301, category:"powermove", name:"Windmill", nameZh:"風車", difficulty:"intermediate", support_points:["肩膀","上背"], muscles:["三角肌","斜方肌","豎脊肌","臀大肌","核心"], power_index:{ upper_limb:70, core:80, lower_limb:65, balance:72, total:72, source:"estimated" }, steps:["從地板俯趴姿勢開始","單肩著地，雙腿張開呈V字","利用肩膀為軸心帶動旋轉","背部滾動接另一側肩膀"], variants:["Shoulder Windmill","Elbow Windmill","Jackhammer"], note:"Breaking 最經典的 Power Move。" },
+  { id:302, category:"powermove", name:"Headspin", nameZh:"頭轉", difficulty:"advanced", support_points:["頭頂"], muscles:["頸部肌群","斜方肌","核心","上肢"], power_index:{ upper_limb:65, core:85, lower_limb:70, balance:90, total:78, source:"estimated" }, steps:["頭頂著地找平衡點","雙腿踢出產生旋轉動力","雙腿收緊加速旋轉","核心持續用力"], variants:["Headstand Spin","Drill"], note:"需要充分的頸部保護訓練。", video_url:"https://www.youtube.com/watch?v=oMRLRMsI5gU" },
+  { id:303, category:"powermove", name:"Flare", nameZh:"托馬斯旋轉", difficulty:"advanced", support_points:["雙手交替"], muscles:["肱三頭肌","三角肌","前鋸肌","腹斜肌","髖屈肌"], power_index:{ upper_limb:92, core:88, lower_limb:75, balance:85, total:85, source:"estimated" }, steps:["從撐地姿勢開始","單手撐起，雙腿張開水平旋轉","雙腿維持完全伸直","手交替支撐帶動連續旋轉"], variants:["Airflare","1-Hand Flare"], note:"需要極強的手腕與肩部力量。" },
+  { id:304, category:"powermove", name:"Backspin", nameZh:"背轉", difficulty:"beginner", support_points:["上背","肩膀"], muscles:["斜方肌","豎脊肌","核心","臀大肌"], power_index:{ upper_limb:30, core:60, lower_limb:55, balance:55, total:50, source:"estimated" }, steps:["背部著地，雙腿踢出","利用慣性帶動背部旋轉","雙腿可伸直或收緊","核心收緊控制方向"], variants:["Backspin to Freeze","Turtle Spin"], note:"Power Move 中最友善的入門動作。" },
+  { id:305, category:"powermove", name:"Airflare", nameZh:"空中旋轉", difficulty:"advanced", support_points:["單手交替"], muscles:["肱三頭肌","三角肌","前鋸肌","核心","髖屈肌"], power_index:{ upper_limb:95, core:90, lower_limb:70, balance:92, total:87, source:"estimated" }, steps:["從 Flare 基礎進化","單手支撐時身體完全騰空","雙腿在空中保持伸直旋轉","落地時另一手接替支撐"], variants:["Airflare to Freeze","Airflare Combo"], note:"Breaking 頂級技術之一。" },
+  { id:1, category:"freeze", name:"Baby Freeze", nameZh:"嬰兒定格", difficulty:"beginner", support_points:["手肘","頭側"], muscles:["三角肌","肱三頭肌","腹橫肌","髖屈肌"], power_index:{ upper_limb:30, core:40, lower_limb:20, balance:60, total:38, source:"estimated" }, steps:["雙膝跪地，雙手撐地","右手肘彎曲讓頭側靠在右手肘","左手撐地保持平衡","雙腳慢慢離地","收緊核心維持3秒"], variants:["Double Baby Freeze","Elbow Baby"], note:"最推薦入門的 Freeze，手肘作為支點。" },
+  { id:2, category:"freeze", name:"Chair Freeze", nameZh:"椅子定格", difficulty:"intermediate", support_points:["單手肘","腰側"], muscles:["肱三頭肌","前鋸肌","腹斜肌","臀中肌"], power_index:{ upper_limb:55, core:65, lower_limb:30, balance:70, total:55, source:"estimated" }, steps:["側身，右手肘頂住右側腰部","左手撐地輔助平衡","核心收緊讓身體側向離地","雙腳可伸直或彎曲"], variants:["High Chair","One Arm Chair"], note:"手肘頂腰的位置非常關鍵。" },
+  { id:3, category:"freeze", name:"Headstand Freeze", nameZh:"頭倒立定格", difficulty:"intermediate", support_points:["頭頂","雙手"], muscles:["頸部肌群","斜方肌","三角肌","腹直肌"], power_index:{ upper_limb:50, core:70, lower_limb:40, balance:75, total:59, source:"estimated" }, steps:["雙手與頭頂形成三角形支撐","頭頂輕放地板","核心用力將雙腿緩緩抬起"], variants:["Stab","Headstand to Spin"], note:"頭頂接觸點應在前三分之一。" },
+  { id:4, category:"freeze", name:"Elbow Freeze", nameZh:"手肘定格", difficulty:"intermediate", support_points:["雙手肘"], muscles:["肱三頭肌","胸大肌","前鋸肌","腹橫肌"], power_index:{ upper_limb:70, core:75, lower_limb:25, balance:72, total:61, source:"estimated" }, steps:["雙手肘撐地形成穩定三角架","前臂貼地，掌心朝下","核心繃緊讓腹部靠近手肘","雙腿慢慢離地向後伸展"], variants:["Planche Freeze","Elbow to Airchair"], note:"肩膀保持穩定不聳起是關鍵。" },
+  { id:5, category:"freeze", name:"Shoulder Freeze", nameZh:"肩膀定格", difficulty:"intermediate", support_points:["肩膀","頸側"], muscles:["斜方肌","三角肌","頸側肌群","腹斜肌"], power_index:{ upper_limb:60, core:68, lower_limb:35, balance:65, total:57, source:"estimated" }, steps:["側躺，以肩膀與頸側為支點","雙手輔助撐地","核心用力讓下半身抬離地板"], variants:["Shoulder Roll to Freeze","Side Freeze"], note:"肩頸承壓需要充分熱身。" },
+  { id:6, category:"freeze", name:"Airchair", nameZh:"空椅定格", difficulty:"advanced", support_points:["單手"], muscles:["肱三頭肌","三角肌","前鋸肌","腹斜肌","髖屈肌"], power_index:{ upper_limb:90, core:85, lower_limb:40, balance:88, total:76, source:"estimated" }, steps:["從 Chair Freeze 開始","單手撐地，移除手肘支撐","核心極度收緊臀部上提","全身重量由單手承受"], variants:["Hollowback Airchair","Airchair to Flare"], note:"需要長期手腕強化訓練。" },
+  { id:7, category:"freeze", name:"Pike Freeze", nameZh:"折刀定格", difficulty:"advanced", support_points:["雙手","頭"], muscles:["三角肌","肱三頭肌","腹直肌","豎脊肌","髖屈肌"], power_index:{ upper_limb:85, core:90, lower_limb:50, balance:85, total:78, source:"estimated" }, steps:["手倒立基礎必備","雙手撐地，雙腿伸直合攏","核心極度收緊身體筆直"], variants:["Handstand Freeze","V-Freeze"], note:"需要完整的倒立訓練基礎。" },
+  { id:8, category:"freeze", name:"1-Hand Freeze", nameZh:"單手定格", difficulty:"advanced", support_points:["單手"], muscles:["肱三頭肌","三角肌","前鋸肌","腕屈肌","腹橫肌"], power_index:{ upper_limb:95, core:88, lower_limb:45, balance:92, total:80, source:"estimated" }, steps:["從雙手倒立開始","慢慢將重心移至慣用手","非慣用手緩緩抬起","全身重量集中在單手"], variants:["1-Hand Press","Flag Freeze"], note:"需數年訓練積累。" },
+];
+
+// ── Init ──
+async function loadDB() {
+  try {
+    const res = await fetch('moves_db.json');
+    const json = await res.json();
+    db = json.moves;
+  } catch(e) {
+    db = FALLBACK_DB;
+  }
+  renderPending();
+  renderAll();
+}
+
+// ── View switching ──
+function switchView(view, btn) {
+  currentView = view;
+  ['library','progress','plan','tree'].forEach(v => {
+    document.getElementById('view-'+v).style.display = v===view ? '' : 'none';
+  });
+  document.querySelectorAll('.main-nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (view === 'progress') renderProgressView();
+  if (view === 'tree') renderSkillTree();
+}
+
+// ── Library ──
+function setCat(c, btn) {
+  activeCat = c;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+function setDiff(d, btn) {
+  activeDiff = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+function getFiltered() {
+  const q = document.getElementById('sq').value.toLowerCase();
+  return db.filter(m => {
+    if (activeCat !== 'all' && m.category !== activeCat) return false;
+    if (activeDiff !== 'all' && m.difficulty !== activeDiff) return false;
+    if (q && !m.name.toLowerCase().includes(q) &&
+            !(m.nameZh||'').includes(q) &&
+            !(m.muscles||[]).join().toLowerCase().includes(q) &&
+            !(m.support_points||[]).join().toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function renderAll() {
+  const filtered = getFiltered();
+  const estimated = filtered.filter(m => m.power_index.source === 'estimated').length;
+  const measured  = filtered.filter(m => m.power_index.source === 'measured').length;
+  const myCount   = filtered.filter(m => progressDB[m.id]).length;
+  document.getElementById('stats-bar').innerHTML =
+    `<span>顯示 <b>${filtered.length}</b> 個動作</span>` +
+    `<span><span class="source-dot source-measured" style="display:inline-block;margin-right:3px;vertical-align:middle"></span>實測 <b>${measured}</b></span>` +
+    `<span><span class="source-dot source-estimated" style="display:inline-block;margin-right:3px;vertical-align:middle"></span>預估 <b>${estimated}</b></span>` +
+    `<span>📌 已追蹤 <b>${myCount}</b></span>`;
+  const cats = activeCat === 'all' ? ['toprock','footwork','powermove','freeze'] : [activeCat];
+  let html = '';
+  cats.forEach(cat => {
+    const items = filtered.filter(m => m.category === cat);
+    if (!items.length) return;
+    html += `<div class="section-heading"><span class="sh-dot" style="background:${catColor[cat]}"></span>${catLabel[cat]}<span style="font-weight:400;color:var(--text3)">${items.length} 個動作</span></div>
+    <div class="grid-wrap"><div class="grid">${items.map(m => renderCard(m)).join('')}</div></div>`;
+  });
+  if (!html) html = '<div class="grid-wrap"><div class="empty">沒有符合條件的動作</div></div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function renderCard(m) {
+  const pi = m.power_index;
+  const barColor = pi.total >= 70 ? '#D85A30' : pi.total >= 50 ? '#EF9F27' : '#1D9E75';
+  const cc = catColor[m.category] || '#888';
+  const prog = progressDB[m.id];
+  const isComparing = compareSet.includes(m.id);
+  const avgStars = getAvgStars(m.id);
+  return `<div class="card ${isComparing?'compare-selected':''}" onclick="showDetail(${m.id})">
+    <div class="card-cat-stripe" style="background:${cc}"></div>
+    ${prog ? `<div class="card-progress-badge" title="${PROGRESS_LABELS[prog]}">${PROGRESS_EMOJI[prog]}</div>` : ''}
+    <div class="card-head">
+      <div>
+        <div class="card-name-en">${m.name}</div>
+        <div class="card-name-zh">${m.nameZh||''}</div>
+      </div>
+      <span class="badge badge-${m.difficulty}">${diffLabel[m.difficulty]}</span>
+    </div>
+    <div class="support-row">${(m.support_points||[]).map(s=>`<span class="stag">${s}</span>`).join('')}</div>
+    <div class="pwr-row">
+      <span class="pwr-label">功率</span>
+      <div class="pwr-bar-bg"><div class="pwr-bar-fill" style="width:${pi.total}%;background:${barColor}"></div></div>
+      <span class="pwr-val">${pi.total}</span>
+    </div>
+    <div class="support-row">${(m.muscles||[]).slice(0,3).map(s=>`<span class="stag">${s}</span>`).join('')}${(m.muscles||[]).length>3?`<span class="stag">+${m.muscles.length-3}</span>`:''}</div>
+    <div class="card-footer">
+      <span class="source-dot ${pi.source==='measured'?'source-measured':'source-estimated'}"></span>
+      <span class="card-source-txt">${pi.source==='measured'?`實測 · ${pi.measured_at||''}`:'預估值'}</span>
+      ${avgStars > 0 ? `<span style="font-size:10px;color:var(--amber-bd);margin-left:auto">★ ${avgStars.toFixed(1)}</span>` : ''}
+      <div class="card-compare-check ${isComparing?'checked':''}" onclick="toggleCompare(event,${m.id})" title="加入比較">${isComparing?'✓':'＋'}</div>
+    </div>
+  </div>`;
+}
+
+// ── Detail ──
+function showDetail(id) {
+  const m = db.find(x=>x.id===id) || pendingDB.find(x=>x.id===id);
+  if (!m) return;
+  showEdit = false;
+  renderDetail(m);
+  document.getElementById('overlay').classList.add('open');
+}
+function renderDetail(m) {
+  const pi = m.power_index || { upper_limb:0, core:0, lower_limb:0, balance:0, total:0, source:'estimated' };
+  const pwrRows = Object.entries(pwrNames).map(([k,label]) => `
+    <div class="pwr-detail-row">
+      <span class="pwr-detail-label">${label}</span>
+      <div class="pwr-detail-bar"><div class="pwr-detail-fill" style="width:${pi[k]||0}%;background:${pwrColors[k]}"></div></div>
+      <span class="pwr-detail-val" style="color:${pwrColors[k]}">${pi[k]||0}</span>
+    </div>`).join('');
+
+  const prog = progressDB[m.id];
+  const progressBtns = ['want','learning','mastered'].map(p => `
+    <button class="progress-btn ${prog===p?'active-'+p:''}" onclick="setProgress(${m.id},'${p}')">
+      ${PROGRESS_EMOJI[p]} ${PROGRESS_LABELS[p]}
+    </button>`).join('');
+
+  // Video embed
+  let videoHtml = '';
+  if (m.video_url) {
+    const ytMatch = m.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/);
+    if (ytMatch) {
+      videoHtml = `<div class="sec"><div class="sec-label">教學影片</div><div class="video-embed"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen loading="lazy"></iframe></div></div>`;
+    } else {
+      videoHtml = `<div class="sec"><div class="sec-label">教學影片</div><a class="video-link" href="${m.video_url}" target="_blank">▶ 觀看影片</a></div>`;
+    }
+  }
+
+  // Prerequisites
+  const prereqIds = PREREQS[m.id] || [];
+  const prereqMoves = prereqIds.map(pid => db.find(x=>x.id===pid)).filter(Boolean);
+  const prereqHtml = prereqMoves.length ? `<div class="sec"><div class="sec-label">前置技能</div><div class="tag-row">${prereqMoves.map(pre=>`<span class="tag prereq-tag" onclick="showDetail(${pre.id});closeDetail()" title="點擊查看">${PROGRESS_EMOJI[progressDB[pre.id]]||'○'} ${pre.name} ${pre.nameZh||''}</span>`).join('')}</div></div>` : '';
+
+  // Rating & comments
+  const ratingData = ratingsDB[m.id] || { stars: 0, comments: [] };
+  const myStars = ratingData.stars || 0;
+  const starsHtml = [1,2,3,4,5].map(s => `<button class="star-btn ${myStars>=s?'filled':''}" onclick="setStars(${m.id},${s})">★</button>`).join('');
+  const commentsHtml = ratingData.comments.length ? `<div class="comments-list">${ratingData.comments.slice(-5).reverse().map(c=>`<div class="comment-item"><div class="comment-item-stars">${'★'.repeat(c.stars)}${'☆'.repeat(5-c.stars)}</div><div class="comment-item-text">${c.text}</div><div class="comment-item-date">${c.date}</div></div>`).join('')}</div>` : `<p style="font-size:12px;color:var(--text3)">還沒有評論，留下第一則！</p>`;
+
+  const editSection = showEdit ? `
+    <div class="edit-section">
+      <div class="sec-label">回填實測數據</div>
+      <div class="edit-grid">
+        <div class="edit-field"><label>上肢功率</label><input type="number" id="ei-ul" min="0" max="100" value="${pi.upper_limb}"></div>
+        <div class="edit-field"><label>核心功率</label><input type="number" id="ei-co" min="0" max="100" value="${pi.core}"></div>
+        <div class="edit-field"><label>下肢功率</label><input type="number" id="ei-ll" min="0" max="100" value="${pi.lower_limb}"></div>
+        <div class="edit-field"><label>平衡指數</label><input type="number" id="ei-ba" min="0" max="100" value="${pi.balance}"></div>
+      </div>
+      <div class="edit-grid">
+        <div class="edit-field"><label>測量日期</label><input type="date" id="ei-date" value="${pi.measured_at||''}"></div>
+        <div class="edit-field"><label>測量者</label><input type="text" id="ei-by" placeholder="教練姓名" value="${pi.measured_by||''}"></div>
+      </div>
+      <div class="edit-field" style="margin-bottom:8px"><label>影片連結</label><input type="text" id="ei-video" placeholder="https://..." value="${m.video_url||''}"></div>
+      <button class="save-btn" onclick="saveData(${m.id})">儲存實測數據</button>
+      <div class="saved-msg" id="saved-msg">已儲存！請手動更新 moves_db.json</div>
+    </div>` : '';
+
+  const cc = catColor[m.category]||'#888';
+  document.getElementById('detail-panel').innerHTML = `
+    <div style="height:3px;border-radius:2px;background:${cc};margin-bottom:1.2rem"></div>
+    <div class="detail-top">
+      <div class="detail-titles">
+        <span style="font-size:11px;font-weight:700;color:${cc};text-transform:uppercase;letter-spacing:.08em">${catLabel[m.category]||''}</span>
+        <span class="detail-name-en">${m.name}</span>
+        <span class="detail-name-zh">${m.nameZh||''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge badge-${m.difficulty}">${diffLabel[m.difficulty]}</span>
+        <button class="close-btn" onclick="closeDetail()">×</button>
+      </div>
+    </div>
+
+    <div class="sec"><div class="sec-label">練習進度</div><div class="progress-sec">${progressBtns}</div></div>
+
+    ${prereqHtml}
+    ${videoHtml}
+    ${(m.support_points||[]).length?`<div class="sec"><div class="sec-label">支撐點</div><div class="tag-row">${m.support_points.map(s=>`<span class="tag">${s}</span>`).join('')}</div></div>`:''}
+    <div class="sec">
+      <div class="sec-label">功率指標（0–100）</div>
+      ${pwrRows}
+      <div class="pwr-total-row"><span>綜合功率指數</span><span>${pi.total}</span></div>
+      <div class="source-info">
+        <span class="source-dot ${pi.source==='measured'?'source-measured':'source-estimated'}"></span>
+        ${pi.source==='measured'?`實測數據 · ${pi.measured_at||''} · ${pi.measured_by||''}`:'目前為預估值'}
+      </div>
+    </div>
+    ${(m.muscles||[]).length?`<div class="sec"><div class="sec-label">主要肌群</div><div class="tag-row">${m.muscles.map(s=>`<span class="tag muscle-tag">${s}</span>`).join('')}</div></div>`:''}
+    ${(m.steps||[]).length?`<div class="sec"><div class="sec-label">教學步驟</div><div class="step-list">${m.steps.map((s,i)=>`<div class="step-item"><span class="step-num">${i+1}</span><span class="step-txt">${s}</span></div>`).join('')}</div></div>`:''}
+    ${(m.variants||[]).length?`<div class="sec"><div class="sec-label">變化型</div><div class="tag-row">${m.variants.map(s=>`<span class="tag variant-tag">${s}</span>`).join('')}</div></div>`:''}
+    ${m.note?`<div class="sec"><div class="sec-label">備注</div><div class="note-box">${m.note}</div></div>`:''}
+
+    <div class="sec">
+      <div class="sec-label">評分與評論</div>
+      <div class="rating-sec">
+        <div class="stars-row">${starsHtml}<span class="star-count">${myStars > 0 ? `我的評分：${myStars} 星` : '點星評分'}</span></div>
+        <textarea class="comment-area" id="comment-input-${m.id}" placeholder="留下練習心得…"></textarea>
+        <button class="comment-submit-btn" onclick="submitComment(${m.id})">送出評論</button>
+      </div>
+      ${commentsHtml}
+    </div>
+
+    ${db.find(x=>x.id===m.id)?`<button class="edit-btn" onclick="toggleEdit(${m.id})">${showEdit?'收起':'回填實測數據 ↓'}</button>${editSection}`:''}
+  `;
+}
+
+// ── Progress ──
+function setProgress(id, state) {
+  if (progressDB[id] === state) {
+    delete progressDB[id];
+  } else {
+    progressDB[id] = state;
+  }
+  localStorage.setItem('breaking_progress', JSON.stringify(progressDB));
+  const m = db.find(x=>x.id===id);
+  if (m) renderDetail(m);
+  renderAll();
+  showToast(progressDB[id] ? `已標記為「${PROGRESS_LABELS[state]}」${PROGRESS_EMOJI[state]}` : '已移除標記');
+}
+
+function renderProgressView() {
+  const want = Object.entries(progressDB).filter(([,v])=>v==='want').map(([k])=>parseInt(k));
+  const learning = Object.entries(progressDB).filter(([,v])=>v==='learning').map(([k])=>parseInt(k));
+  const mastered = Object.entries(progressDB).filter(([,v])=>v==='mastered').map(([k])=>parseInt(k));
+  function moveRow(id) {
+    const m = db.find(x=>x.id===id); if(!m) return '';
+    return `<div class="prog-item" onclick="showDetail(${m.id})">
+      <div>
+        <div class="prog-item-name">${m.name} <span style="font-size:12px;font-weight:400;color:var(--text3)">${m.nameZh||''}</span></div>
+        <div class="prog-item-sub">${catLabel[m.category]} · ${diffLabel[m.difficulty]}</div>
+      </div>
+      <div class="prog-item-right">
+        <span class="badge badge-${m.difficulty}">${diffLabel[m.difficulty]}</span>
+        <button class="prog-remove" onclick="event.stopPropagation();removeProgress(${m.id})">移除</button>
+      </div>
+    </div>`;
+  }
+  const total = want.length + learning.length + mastered.length;
+  document.getElementById('progress-view-content').innerHTML = `
+    <div class="progress-summary">
+      <div class="prog-card"><div class="prog-card-count" style="color:var(--blue)">${want.length}</div><div class="prog-card-label">📌 想學</div></div>
+      <div class="prog-card"><div class="prog-card-count" style="color:var(--amber)">${learning.length}</div><div class="prog-card-label">🔥 練習中</div></div>
+      <div class="prog-card"><div class="prog-card-count" style="color:var(--teal)">${mastered.length}</div><div class="prog-card-label">✅ 已掌握</div></div>
+    </div>
+    ${total === 0 ? `<p style="color:var(--text3);font-size:14px;text-align:center;padding:3rem 0">還沒有追蹤任何動作，去動作庫點選「想學 / 練習中 / 已掌握」開始！</p>` : ''}
+    ${learning.length?`<div class="prog-section-title">🔥 練習中</div><div class="prog-list">${learning.map(moveRow).join('')}</div>`:''}
+    ${want.length?`<div class="prog-section-title">📌 想學</div><div class="prog-list">${want.map(moveRow).join('')}</div>`:''}
+    ${mastered.length?`<div class="prog-section-title">✅ 已掌握</div><div class="prog-list">${mastered.map(moveRow).join('')}</div>`:''}
+  `;
+}
+function removeProgress(id) {
+  delete progressDB[id];
+  localStorage.setItem('breaking_progress', JSON.stringify(progressDB));
+  renderProgressView(); renderAll();
+  showToast('已移除標記');
+}
+
+// ── Rating ──
+function setStars(id, stars) {
+  if (!ratingsDB[id]) ratingsDB[id] = { stars: 0, comments: [] };
+  ratingsDB[id].stars = stars;
+  localStorage.setItem('breaking_ratings', JSON.stringify(ratingsDB));
+  const m = db.find(x=>x.id===id);
+  if (m) renderDetail(m);
+  showToast(`評了 ${stars} 顆星！`);
+}
+function submitComment(id) {
+  const input = document.getElementById('comment-input-'+id);
+  const text = input.value.trim();
+  if (!text) { showToast('請輸入評論內容'); return; }
+  if (!ratingsDB[id]) ratingsDB[id] = { stars: 0, comments: [] };
+  ratingsDB[id].comments.push({ stars: ratingsDB[id].stars, text, date: new Date().toLocaleDateString('zh-TW') });
+  localStorage.setItem('breaking_ratings', JSON.stringify(ratingsDB));
+  const m = db.find(x=>x.id===id);
+  if (m) renderDetail(m);
+  showToast('評論已送出 ✓');
+}
+function getAvgStars(id) {
+  const r = ratingsDB[id];
+  if (!r) return 0;
+  const all = [...(r.comments||[]).map(c=>c.stars), r.stars].filter(s=>s>0);
+  if (!all.length) return 0;
+  return all.reduce((a,b)=>a+b,0)/all.length;
+}
+
+// ── Compare ──
+function toggleCompare(e, id) {
+  e.stopPropagation();
+  if (compareSet.includes(id)) {
+    compareSet = compareSet.filter(x=>x!==id);
+  } else {
+    if (compareSet.length >= 3) { showToast('最多比較 3 個動作'); return; }
+    compareSet.push(id);
+  }
+  renderAll();
+  updateCompareBar();
+}
+function updateCompareBar() {
+  const bar = document.getElementById('compare-bar');
+  document.getElementById('compare-count').textContent = compareSet.length;
+  bar.classList.toggle('visible', compareSet.length >= 2);
+}
+function clearCompare() { compareSet = []; renderAll(); updateCompareBar(); }
+function openCompare() {
+  if (compareSet.length < 2) return;
+  const moves = compareSet.map(id => db.find(x=>x.id===id)).filter(Boolean);
+  const cols = moves.length + 1;
+  const colDef = `80px ${moves.map(()=>'1fr').join(' ')}`;
+  function row(label, vals) {
+    return `<div class="compare-row" style="grid-template-columns:${colDef}">
+      <div class="compare-cell label">${label}</div>
+      ${vals.map(v=>`<div class="compare-cell">${v}</div>`).join('')}
+    </div>`;
+  }
+  function pwrRow(key, label) {
+    const vals = moves.map(m=>m.power_index[key]||0);
+    const max = Math.max(...vals);
+    return `<div class="compare-row" style="grid-template-columns:${colDef}">
+      <div class="compare-cell label">${label}</div>
+      ${vals.map((v,i)=>`<div class="compare-cell ${v===max?'compare-best':''}">
+        ${v}<div class="compare-bar-mini"><div class="compare-bar-mini-fill" style="width:${v}%;background:${pwrColors[key]}"></div></div>
+      </div>`).join('')}
+    </div>`;
+  }
+  const totals = moves.map(m=>m.power_index.total||0);
+  const maxTotal = Math.max(...totals);
+  document.getElementById('compare-inner').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <h2>動作比較</h2>
+      <button class="close-btn" onclick="closeCompare()">×</button>
+    </div>
+    <div class="compare-table" style="grid-template-columns:${colDef}">
+      <div class="compare-row header-row" style="grid-template-columns:${colDef}">
+        <div class="compare-cell"></div>
+        ${moves.map(m=>`<div class="compare-cell">${m.name}<br><span style="font-weight:400;color:var(--text3)">${m.nameZh||''}</span></div>`).join('')}
+      </div>
+      ${row('類別', moves.map(m=>`<span style="color:${catColor[m.category]}">${catLabel[m.category]}</span>`))}
+      ${row('難度', moves.map(m=>`<span class="badge badge-${m.difficulty}">${diffLabel[m.difficulty]}</span>`))}
+      ${row('支撐點', moves.map(m=>(m.support_points||[]).join('、')))}
+      ${row('主要肌群', moves.map(m=>(m.muscles||[]).slice(0,3).join('、')))}
+      ${pwrRow('upper_limb','上肢')}
+      ${pwrRow('core','核心')}
+      ${pwrRow('lower_limb','下肢')}
+      ${pwrRow('balance','平衡')}
+      <div class="compare-row" style="grid-template-columns:${colDef}">
+        <div class="compare-cell label">總功率</div>
+        ${totals.map(v=>`<div class="compare-cell ${v===maxTotal?'compare-best':''}"><span style="font-size:18px;font-weight:700">${v}</span><div class="compare-bar-mini"><div class="compare-bar-mini-fill" style="width:${v}%;background:var(--accent)"></div></div></div>`).join('')}
+      </div>
+      ${row('前置技能數', moves.map(m=>(PREREQS[m.id]||[]).length + ' 個'))}
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px">綠色粗體 = 該項最高值</p>
+  `;
+  document.getElementById('compare-modal').classList.add('open');
+}
+function closeCompare() { document.getElementById('compare-modal').classList.remove('open'); }
+
+// ── Skill tree SVG ──
+function renderSkillTree() {
+  const allIds = db.map(m=>m.id);
+  // Layout: group by category
+  const cats = ['toprock','footwork','powermove','freeze'];
+  const W = 900, NODEW = 120, NODEH = 42, XGAP = 150, YGAP = 60, TOPPAD = 30, LEFTPAD = 20;
+  let nodes = {}; // id -> {x,y,m}
+  cats.forEach((cat,ci) => {
+    const catMoves = db.filter(m=>m.category===cat);
+    const baseX = LEFTPAD + ci * (NODEW + XGAP);
+    catMoves.forEach((m,mi) => {
+      nodes[m.id] = { x: baseX, y: TOPPAD + mi * (NODEH + YGAP), m };
+    });
+  });
+  const maxY = Math.max(...Object.values(nodes).map(n=>n.y)) + NODEH + 20;
+  const svgW = LEFTPAD*2 + 4*(NODEW + XGAP);
+  const svg = document.getElementById('skill-tree-svg');
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${maxY}`);
+  svg.style.height = maxY + 'px';
+
+  let edgesHtml = '';
+  Object.entries(PREREQS).forEach(([toId, fromIds]) => {
+    const to = nodes[parseInt(toId)];
+    if (!to) return;
+    fromIds.forEach(fromId => {
+      const from = nodes[fromId];
+      if (!from) return;
+      const x1 = from.x + NODEW/2, y1 = from.y + NODEH;
+      const x2 = to.x + NODEW/2, y2 = to.y;
+      edgesHtml += `<path d="M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}" fill="none" stroke="var(--border2)" stroke-width="1.5" class="tree-edge"/>`;
+    });
+  });
+
+  let nodesHtml = '';
+  Object.values(nodes).forEach(({x, y, m}) => {
+    const prog = progressDB[m.id];
+    const cc = catColor[m.category]||'#888';
+    const fillColor = prog==='mastered' ? 'var(--teal-bg)' : prog==='learning' ? 'var(--amber-bg)' : prog==='want' ? 'var(--blue-bg)' : 'var(--surface)';
+    const strokeColor = prog ? cc : 'var(--border)';
+    const emoji = prog ? PROGRESS_EMOJI[prog] : '';
+    nodesHtml += `<g class="tree-node" onclick="showDetail(${m.id})">
+      <rect x="${x}" y="${y}" width="${NODEW}" height="${NODEH}" rx="8" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1.5"/>
+      <rect x="${x}" y="${y}" width="4" height="${NODEH}" rx="2" fill="${cc}"/>
+      <text x="${x+12}" y="${y+16}" font-size="11" font-weight="700" fill="var(--text)" font-family="sans-serif">${emoji}${m.name}</text>
+      <text x="${x+12}" y="${y+30}" font-size="10" fill="var(--text3)" font-family="sans-serif">${m.nameZh||''} · ${diffLabel[m.difficulty]}</text>
+    </g>`;
+  });
+
+  // Category labels at top
+  let labelsHtml = '';
+  cats.forEach((cat,ci)=>{
+    labelsHtml += `<text x="${LEFTPAD + ci*(NODEW+XGAP) + NODEW/2}" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="${catColor[cat]}" font-family="sans-serif" text-transform="uppercase">${catLabel[cat]}</text>`;
+  });
+
+  svg.innerHTML = `<defs></defs>${labelsHtml}${edgesHtml}${nodesHtml}`;
+}
+
+// ── Training plan ──
+function generatePlan() {
+  const cat = document.getElementById('plan-cat').value;
+  const diffMode = document.getElementById('plan-diff').value;
+  const days = parseInt(document.getElementById('plan-days').value);
+  let pool = db.filter(m => cat==='all' || m.category===cat);
+  const diffMap = { beginner:['beginner'], mixed:['beginner','intermediate'], intermediate:['intermediate'], advanced:['intermediate','advanced'] };
+  const allowed = diffMap[diffMode];
+  pool = pool.filter(m => allowed.includes(m.difficulty));
+  if (!pool.length) { showToast('沒有符合條件的動作，請調整設定'); return; }
+
+  // Sort by total power index
+  pool.sort((a,b) => a.power_index.total - b.power_index.total);
+  // Build daily plan
+  const movesPerDay = 2;
+  const tips = [
+    '記得充分熱身 10 分鐘再開始練習',
+    '每個動作練習 10–15 分鐘，休息 2 分鐘',
+    '錄影自己的練習，比較前後差異',
+    '核心練習穿插在每天訓練中',
+    '感覺肌肉痠痛時可降低強度',
+    '嘗試在鏡子前練習，矯正姿勢',
+    '先慢後快，建立肌肉記憶',
+    '找夥伴互相給予回饋效果更好',
+  ];
+
+  let html = '';
+  for (let d = 1; d <= days; d++) {
+    const dayMoves = [];
+    for (let i = 0; i < movesPerDay; i++) {
+      dayMoves.push(pool[(((d-1)*movesPerDay)+i) % pool.length]);
+    }
+    const tip = tips[(d-1) % tips.length];
+    html += `<div class="plan-day">
+      <div class="plan-day-header"><span class="plan-day-num">${d}</span>第 ${d} 天</div>
+      <div class="plan-day-moves">
+        ${dayMoves.map(m=>`<div class="plan-move-row">
+          <span class="badge badge-${m.difficulty}">${diffLabel[m.difficulty]}</span>
+          <div><div class="plan-move-name">${m.name} ${m.nameZh||''}</div><div class="plan-move-cat">${catLabel[m.category]}</div></div>
+        </div>`).join('')}
+      </div>
+      <div class="plan-tip">💡 ${tip}</div>
+    </div>`;
+  }
+  document.getElementById('plan-output').innerHTML = html;
+  showToast(`已產生 ${days} 天訓練計劃 ✓`);
+}
+
+// ── Admin / Submit ──
+function toggleEdit(id) { showEdit = !showEdit; renderDetail(db.find(x=>x.id===id)); }
+function saveData(id) {
+  const m = db.find(x=>x.id===id);
+  m.power_index.upper_limb = parseInt(document.getElementById('ei-ul').value)||0;
+  m.power_index.core = parseInt(document.getElementById('ei-co').value)||0;
+  m.power_index.lower_limb = parseInt(document.getElementById('ei-ll').value)||0;
+  m.power_index.balance = parseInt(document.getElementById('ei-ba').value)||0;
+  m.power_index.total = Math.round((m.power_index.upper_limb+m.power_index.core+m.power_index.lower_limb+m.power_index.balance)/4);
+  m.power_index.source = 'measured';
+  m.power_index.measured_at = document.getElementById('ei-date').value;
+  m.power_index.measured_by = document.getElementById('ei-by').value;
+  const vd = document.getElementById('ei-video').value;
+  if (vd) m.video_url = vd;
+  const blob = new Blob([JSON.stringify({version:"3.0",last_updated:new Date().toISOString().slice(0,10),moves:db},null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='moves_db.json'; a.click();
+  document.getElementById('saved-msg').style.display='block';
+  renderAll();
+  showToast('數據已儲存並下載 ✓');
+}
+function closeDetail() { document.getElementById('overlay').classList.remove('open'); showEdit=false; }
+function handleOverlayClick(e) { if(e.target===document.getElementById('overlay')) closeDetail(); }
+function openSubmit() { document.getElementById('submit-modal').classList.add('open'); }
+function closeSubmit() { document.getElementById('submit-modal').classList.remove('open'); }
+function handleModalClick(e) { if(e.target===document.getElementById('submit-modal')) closeSubmit(); }
+function submitMove() {
+  const nameEn=document.getElementById('f-name-en').value.trim();
+  const nameZh=document.getElementById('f-name-zh').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  if(!nameEn||!nameZh||!desc){showToast('請填寫必填欄位（*）');return;}
+  const entry={id:Date.now(),category:document.getElementById('f-cat').value,name:nameEn,nameZh:nameZh,difficulty:document.getElementById('f-diff').value,support_points:document.getElementById('f-support').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),muscles:document.getElementById('f-muscles').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),note:desc,video_url:document.getElementById('f-video').value.trim(),author:document.getElementById('f-author').value.trim()||'匿名',submitted_at:new Date().toISOString().slice(0,10),status:'pending',power_index:{upper_limb:0,core:0,lower_limb:0,balance:0,total:0,source:'estimated'},steps:[],variants:[]};
+  pendingDB.push(entry);
+  localStorage.setItem('breaking_pending',JSON.stringify(pendingDB));
+  closeSubmit();clearForm();renderPending();
+  showToast('投稿成功！審核中 ⏳');
+}
+function clearForm(){['f-name-en','f-name-zh','f-support','f-desc','f-muscles','f-video','f-author'].forEach(id=>document.getElementById(id).value='');}
+function renderPending(){
+  const wrap=document.getElementById('pending-wrap');
+  if(!pendingDB.length){wrap.innerHTML='';return;}
+  wrap.innerHTML=`<div class="pending-panel"><div class="pending-header"><span class="pending-title">⏳ 待審核投稿</span><span class="pending-count">${pendingDB.length}</span></div><div class="pending-list">${pendingDB.map(p=>`<div class="pending-item"><div><div class="pending-item-name">${p.name} <span style="font-weight:400;color:var(--text3)">${p.nameZh}</span></div><div class="pending-item-sub">${diffLabel[p.difficulty]} · 投稿人：${p.author} · ${p.submitted_at}</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="pending-approve-btn" onclick="approvePending(${p.id})">通過</button><button class="pending-reject-btn" onclick="rejectPending(${p.id})">退回</button></div></div>`).join('')}</div><div style="font-size:11px;color:var(--amber);margin-top:8px;opacity:.7">管理員操作</div></div>`;
+}
+function approvePending(id){const pw=prompt('請輸入管理員密碼：');if(pw!==ADMIN_PW){showToast('密碼錯誤');return;}const idx=pendingDB.findIndex(x=>x.id===id);if(idx===-1)return;db.push({...pendingDB[idx],status:'approved'});pendingDB.splice(idx,1);localStorage.setItem('breaking_pending',JSON.stringify(pendingDB));renderPending();renderAll();showToast('已通過審核 ✓');}
+function rejectPending(id){const pw=prompt('請輸入管理員密碼：');if(pw!==ADMIN_PW){showToast('密碼錯誤');return;}pendingDB=pendingDB.filter(x=>x.id!==id);localStorage.setItem('breaking_pending',JSON.stringify(pendingDB));renderPending();showToast('已退回投稿');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+loadDB();
+</script>
+</body>
+</html>
